@@ -4,10 +4,20 @@
  */
 import { type Address } from 'viem';
 
+// Define EIP-1193 provider interface
+interface EthereumProvider {
+  isMetaMask?: boolean;
+  request: (args: { method: string; params?: unknown[] }) => Promise<unknown>;
+  on: (event: string, listener: (...args: any[]) => void) => void;
+  removeListener: (event: string, listener: (...args: any[]) => void) => void;
+  selectedAddress?: string;
+  chainId?: string;
+}
+
 // Types for environment
 declare global {
   interface Window {
-    ethereum?: any;
+    ethereum?: EthereumProvider;
   }
 }
 
