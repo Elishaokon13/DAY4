@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
 import Navbar from '@/components/ui/navbar';
@@ -13,7 +13,7 @@ import { mintCoinWithWallet } from '@/utils/zora-client-side';
 
 export default function Home() {
   // Auth state
-  const { isAuthenticated, address } = useAuth();
+  const { isAuthenticated, address, isConnectedToBaseChain, switchToBaseNetwork } = useAuth();
   const { user } = usePrivy();
   
   // Blog content state
@@ -35,6 +35,20 @@ export default function Home() {
     description: string;
     imageUri: string;
   } | null>(null);
+
+  // Prompt user to switch to Base network if connected to the wrong network
+  useEffect(() => {
+    if (isAuthenticated && !isConnectedToBaseChain) {
+      toast.error(
+        'Please connect to Base network to mint coins',
+        { 
+          id: 'network-check',
+          duration: 5000,
+          icon: '🔄'
+        }
+      );
+    }
+  }, [isAuthenticated, isConnectedToBaseChain]);
 
   // Handle blog content change
   const handleContentChange = (content: string) => {
@@ -116,6 +130,18 @@ export default function Home() {
       return;
     }
 
+    // Check if connected to Base network, if not, prompt to switch
+    if (!isConnectedToBaseChain) {
+      toast.loading('Switching to Base network...', { id: 'network-switch' });
+      const switched = await switchToBaseNetwork();
+      toast.dismiss('network-switch');
+      
+      if (!switched) {
+        toast.error('You need to be connected to Base network to mint coins');
+        return;
+      }
+    }
+
     try {
       setIsMinting(true);
       toast.loading('Uploading to IPFS...', { id: 'minting' });
@@ -172,6 +198,31 @@ export default function Home() {
           </p>
           
           <div className="space-y-8">
+            {/* Network Status Alert */}
+            {isAuthenticated && !isConnectedToBaseChain && (
+              <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 rounded" role="alert">
+                <div className="flex items-center">
+                  <div className="py-1">
+                    <svg className="h-6 w-6 text-yellow-500 mr-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                  </div>
+                  <div>
+                    <p className="font-bold">Wrong Network</p>
+                    <p className="text-sm">You need to be connected to Base network to mint coins.</p>
+                  </div>
+                  <div className="ml-auto">
+                    <button 
+                      onClick={switchToBaseNetwork}
+                      className="bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-1 px-4 rounded text-sm"
+                    >
+                      Switch Network
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+            
             {/* Blog Editor */}
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
               <h2 className="text-xl font-semibold mb-4">Write Your Blog Post</h2>
