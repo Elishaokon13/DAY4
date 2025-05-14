@@ -85,7 +85,7 @@ export function BlogEditor() {
       );
 
       // Step 3: Create the ERC-20 coin using Zora Coins SDK
-      const txHash = await createBlogCoin({
+      const result = await createBlogCoin({
         name: `${title} Coin`,
         symbol: symbol.toUpperCase(),
         description: `Token for blog post: ${title}`,
@@ -93,11 +93,9 @@ export function BlogEditor() {
         metadataUri: `ipfs://${finalIpfsResponse.IpfsHash}`,
       });
 
-      // For a real implementation, we'd fetch the contract address from the transaction receipt
-      // Since we're using a mock implementation, we'll generate a mock address
-      const mockContractAddress = `0x${Math.random().toString(16).substring(2, 42)}`;
-      setSuccess(`Successfully published! Transaction hash: ${txHash}`);
-      setCoinAddress(mockContractAddress); // Store the contract address instead of the tx hash
+      // Show success message with transaction hash
+      setSuccess(`Successfully published! Transaction hash: ${result.hash}`);
+      setCoinAddress(result.contractAddress);
 
       // Reset form
       setTitle('');
