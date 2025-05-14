@@ -99,16 +99,16 @@ export function BlogEditor() {
         metadataUri
       };
 
-      // Option 1: Use our simplified implementation for testing
+      // Option 1: Use our simplified implementation (demo only)
       const result = await createBlogCoin(coinParams);
-      setSuccess(`Successfully published! Your blog post has been minted as a coin.`);
+      setSuccess(`Successfully uploaded to IPFS! Your content is now ready to be minted as a coin.`);
       setCoinAddress(result.contractAddress);
       setTxHash(result.hash);
 
       // Option 2: Redirect to Zora's coin creation interface
       const shouldRedirect = window.confirm(
-        'Would you like to be redirected to Zora to create your coin directly? ' +
-        'This will open a new tab where you can finalize the minting process.'
+        'To mint a real coin on Base Sepolia testnet, you need to be redirected to Zora. ' +
+        'Would you like to open Zora\'s coin creation interface with your blog details pre-filled?'
       );
 
       if (shouldRedirect) {
