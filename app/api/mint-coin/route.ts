@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createPublicClient, http } from 'viem';
+import { http } from 'viem';
 import { base, baseSepolia } from 'viem/chains';
 import { prepareCoinParams } from '@/utils/zora-client';
 
@@ -30,12 +30,6 @@ export async function POST(request: NextRequest) {
       ? process.env.NEXT_PUBLIC_BASE_SEPOLIA_RPC_URL || 'https://sepolia.base.org'
       : process.env.NEXT_PUBLIC_BASE_MAINNET_RPC_URL || 'https://mainnet.base.org';
     
-    // Create a public client for querying the blockchain
-    const publicClient = createPublicClient({
-      chain,
-      transport: http(rpcUrl)
-    });
-
     // Prepare the coin parameters
     const coinParams = prepareCoinParams({
       name,
@@ -53,7 +47,7 @@ export async function POST(request: NextRequest) {
       chainId: chain.id,
       message: 'Use these parameters with client-side wallet to sign and create the coin'
     });
-  } catch (error: any) {
+  } catch (error: Error) {
     console.error('Error preparing coin data:', error);
     return NextResponse.json(
       { 
