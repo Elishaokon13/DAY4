@@ -2,6 +2,7 @@
 
 import { PrivyProvider } from "@privy-io/react-auth";
 import { ThemeProvider } from "next-themes";
+import { Toaster } from "react-hot-toast";
 import React from "react";
 
 export default function Providers({
@@ -26,6 +27,7 @@ export default function Providers({
       }}
     >
       <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+        <Toaster position="bottom-right" />
         {children}
       </ThemeProvider>
     </PrivyProvider>
