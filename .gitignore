@@ -34,3 +34,10 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# auto-commit scripts
+auto-commit.sh
+watch-and-commit.sh
+AUTO-COMMIT-README.md
+auto-commit.log
+.cursor/
