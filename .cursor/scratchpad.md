@@ -107,7 +107,9 @@ We have completed the implementation of almost all major components of the BlogC
 6. Set up ERC-20 coin minting with Zora Coins SDK
 7. Created comprehensive documentation
 
-**Update**: Fixed the Zora Coins SDK implementation to use the latest API. The previous implementation was using a non-existent `ZoraCoinsClient` class. We've updated it to use the proper `createCoin` function from the SDK along with Viem's public and wallet clients.
+**Updates**:
+- Fixed the Zora Coins SDK implementation to use the latest API. The previous implementation was using a non-existent `ZoraCoinsClient` class. We've updated it to use the proper `createCoin` function from the SDK along with Viem's public and wallet clients.
+- Fixed TypeScript errors in the Privy provider configuration in app/providers.tsx. Removed unsupported properties (desktopLayout, modalBackdrop, modalBorderRadius, defaultButtonStyle, preferencesInStorage, requireUserPasswordOnCreate, noPromptOnSignature) and updated the embeddedWallets configuration to use the current Privy API format.
 
 What remains to be done:
 1. The .env.local file creation was blocked, but placeholders have been documented in the README
@@ -119,7 +121,9 @@ What remains to be done:
 2. There are some vulnerabilities in the dependencies (axios in @pinata/sdk and quill in react-quill). In a production environment, these should be addressed by either updating the dependencies or finding alternative libraries.
 3. To fully test the application, we would need valid API keys for OpenAI, Privy, and Pinata.
 4. For production deployment, a secure method for managing the minter's private key would be needed.
-5. There was a TypeScript error in our Zora SDK implementation that we've now fixed. We updated it to use the correct API functions, imported from the SDK.
+5. Fixed TypeScript errors in the Privy provider configuration. The previous configuration was using outdated or unsupported properties in the Privy SDK. We've updated it to match the current Privy documentation. The main changes were:
+   - Removed unsupported UI customization properties like `desktopLayout`, `modalBackdrop`, `modalBorderRadius`, etc.
+   - Updated the `embeddedWallets` configuration to the proper format with nested `ethereum` object and removed unsupported properties like `preferencesInStorage`, `requireUserPasswordOnCreate`, and `noPromptOnSignature`
 
 ## Lessons
 - Include info useful for debugging in the program output.
@@ -131,3 +135,4 @@ What remains to be done:
 - When handling multiple asynchronous operations (AI generation, IPFS uploads, blockchain transactions), use proper error handling and loading states to provide a good user experience.
 - When implementing third-party SDKs, check for recent updates to their API. The Zora Coins SDK changed its API from a client-based approach to a function-based approach.
 - For ES2020+ features like BigInt literals, use constructor functions (e.g., `BigInt(0)` instead of `0n`) if targeting older JavaScript versions. 
+- When using third-party libraries like Privy, always refer to the latest documentation as configuration options might change between versions. Check for TypeScript errors that indicate incompatible property names. 
