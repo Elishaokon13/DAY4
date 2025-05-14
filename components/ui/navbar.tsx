@@ -8,7 +8,6 @@ import toast from 'react-hot-toast';
 
 export default function Navbar() {
   const { login, authenticated, user, logout } = usePrivy();
-  const [isHovering, setIsHovering] = useState(false);
 
   const handleWalletClick = () => {
     if (authenticated) {
@@ -50,8 +49,6 @@ export default function Navbar() {
             <ThemeToggle />
             
             <motion.button
-              onMouseEnter={() => setIsHovering(true)}
-              onMouseLeave={() => setIsHovering(false)}
               whileHover={{ scale: 1.03 }}
               whileTap={{ scale: 0.97 }}
               onClick={handleWalletClick}
