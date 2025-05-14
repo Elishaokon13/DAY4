@@ -3,9 +3,10 @@
  * Handles creating coins from blog posts
  */
 import { type Address } from 'viem';
-import { createPublicClient, http } from 'viem';
-import { baseSepolia } from 'viem/chains';
-import { createCoin } from '@zoralabs/coins-sdk';
+// Remove unused imports
+// import { createPublicClient, http } from 'viem';
+// import { baseSepolia } from 'viem/chains';
+// import { createCoin } from '@zoralabs/coins-sdk';
 
 // Remove global interface declaration to avoid conflicts
 // The window.ethereum property is handled directly in the code
@@ -39,11 +40,11 @@ export interface BlogPostIPFSMetadata {
   content: string;
 }
 
-// Create a public client for Base Sepolia testnet
-const publicClient = createPublicClient({
-  chain: baseSepolia,
-  transport: http(),
-});
+// Remove unused public client variable
+// const publicClient = createPublicClient({
+//   chain: baseSepolia,
+//   transport: http(),
+// });
 
 /**
  * Create a new ERC-20 coin from a blog post
