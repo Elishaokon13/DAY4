@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
-import * as PinataSDK from '@pinata/sdk';
+import { PinataPinResponse, PinataSDK } from '@pinata/sdk';
 import { v4 as uuidv4 } from 'uuid';
 import fetch from 'node-fetch';
 
 // Initialize Pinata client
-const pinata = new PinataSDK.PinataClient({ 
-  pinataApiKey: process.env.PINATA_API_KEY,
-  pinataSecretApiKey: process.env.PINATA_API_SECRET
-});
+const pinata = new PinataSDK(
+  process.env.PINATA_API_KEY || '',
+  process.env.PINATA_API_SECRET || ''
+);
 
 // Helper function to fetch and convert image to File object
 async function fetchImageToBuffer(imageUrl: string): Promise<Buffer> {
@@ -76,6 +76,11 @@ export async function POST(request: NextRequest) {
       } catch (error) {
         console.error('Error uploading image to IPFS:', error);
         // Continue without image if there's an error
+        return NextResponse.json({
+          contentUri,
+          imageUri: imageUri, // Return original image URI if IPFS upload fails
+          error: `Image upload to IPFS failed: ${error.message}`
+        });
       }
     }
     
@@ -87,7 +92,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Error uploading to IPFS:', error);
     return NextResponse.json(
-      { error: 'Failed to upload to IPFS' },
+      { error: `Failed to upload to IPFS: ${error.message}` },
       { status: 500 }
     );
   }
