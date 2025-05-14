@@ -23,11 +23,12 @@ export async function POST(request: NextRequest) {
     }
 
     // Determine which network to use (duplicating logic instead of using the client function)
-    const network = process.env.NEXT_PUBLIC_ZORA_NETWORK || 'base-sepolia';
-    const chain = network === 'base' ? base : baseSepolia;
-    const rpcUrl = network === 'base' 
-      ? process.env.NEXT_PUBLIC_BASE_MAINNET_RPC_URL || 'https://mainnet.base.org'
-      : process.env.NEXT_PUBLIC_BASE_SEPOLIA_RPC_URL || 'https://sepolia.base.org';
+    // Default to Base mainnet (instead of Sepolia)
+    const network = process.env.NEXT_PUBLIC_ZORA_NETWORK || 'base';
+    const chain = network === 'base-sepolia' ? baseSepolia : base;
+    const rpcUrl = network === 'base-sepolia' 
+      ? process.env.NEXT_PUBLIC_BASE_SEPOLIA_RPC_URL || 'https://sepolia.base.org'
+      : process.env.NEXT_PUBLIC_BASE_MAINNET_RPC_URL || 'https://mainnet.base.org';
     
     // Create a public client for querying the blockchain
     const publicClient = createPublicClient({
