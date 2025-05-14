@@ -1,1 +1,90 @@
- 
+import React from 'react';
+import { Button } from './ui/button';
+import { ExternalLink } from 'lucide-react';
+
+interface CoinInfoProps {
+  contractAddress: string;
+  txHash?: string;
+  coinName?: string;
+  coinSymbol?: string;
+}
+
+/**
+ * Component that displays information about a minted coin
+ * including contract address and links to view on blockchain explorers
+ */
+export default function CoinInfo({ contractAddress, txHash, coinName, coinSymbol }: CoinInfoProps) {
+  if (!contractAddress || contractAddress.startsWith('contract_')) {
+    return null; // Don't display anything if there's no real contract address
+  }
+
+  const truncateAddress = (address: string) => {
+    if (!address) return '';
+    return `${address.slice(0, 6)}...${address.slice(-4)}`;
+  };
+
+  // Generate external links
+  const baseScanUrl = `https://sepolia.basescan.org/address/${contractAddress}`;
+  const dexScreenerUrl = `https://dexscreener.com/base-sepolia/${contractAddress}`;
+
+  return (
+    <div className="w-full mt-6 p-6 border rounded-lg bg-slate-50 dark:bg-slate-900 shadow-sm">
+      <h3 className="text-lg font-medium mb-2">Minted Coin Details</h3>
+      
+      {coinName && coinSymbol && (
+        <div className="mb-4">
+          <p className="font-semibold">{coinName} ({coinSymbol})</p>
+        </div>
+      )}
+      
+      <div className="mb-4">
+        <p className="text-sm text-slate-500 dark:text-slate-400">Contract Address:</p>
+        <div className="flex items-center mt-1">
+          <code className="bg-slate-100 dark:bg-slate-800 p-2 rounded text-sm font-mono flex-1 overflow-x-auto">
+            {contractAddress}
+          </code>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => navigator.clipboard.writeText(contractAddress)}
+            className="ml-2"
+          >
+            Copy
+          </Button>
+        </div>
+      </div>
+      
+      {txHash && !txHash.startsWith('tx_') && (
+        <div className="mb-4">
+          <p className="text-sm text-slate-500 dark:text-slate-400">Transaction:</p>
+          <div className="flex items-center mt-1">
+            <code className="bg-slate-100 dark:bg-slate-800 p-2 rounded text-sm font-mono flex-1 overflow-x-auto">
+              {truncateAddress(txHash)}
+            </code>
+          </div>
+        </div>
+      )}
+      
+      <div className="flex flex-col sm:flex-row gap-2 mt-4">
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={() => window.open(baseScanUrl, '_blank')}
+          className="flex items-center justify-center"
+        >
+          View on BaseScan
+          <ExternalLink className="ml-1 h-3 w-3" />
+        </Button>
+        <Button 
+          variant="outline" 
+          size="sm" 
+          onClick={() => window.open(dexScreenerUrl, '_blank')}
+          className="flex items-center justify-center"
+        >
+          View on DexScreener
+          <ExternalLink className="ml-1 h-3 w-3" />
+        </Button>
+      </div>
+    </div>
+  );
+} 
