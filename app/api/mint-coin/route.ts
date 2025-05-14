@@ -1,12 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createWalletClient, http } from 'viem';
-import { privateKeyToAccount } from 'viem/accounts';
+import { createPublicClient, http } from 'viem';
 import { base, baseSepolia } from 'viem/chains';
-import { mintBlogCoin } from '@/utils/zora-client';
-
-// This would typically be stored in a secure environment variable
-// Using a dummy private key for demo purposes (DO NOT use in production)
-const PRIVATE_KEY = process.env.MINTER_PRIVATE_KEY || '0x0000000000000000000000000000000000000000000000000000000000000000';
+import { prepareCoinParams, getNetworkInfo } from '@/utils/zora-client';
 
 export async function POST(request: NextRequest) {
   try {
@@ -27,52 +22,37 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Determine which network to use
-    const network = process.env.NEXT_PUBLIC_ZORA_NETWORK || 'base-sepolia';
-    const chain = network === 'base' ? base : baseSepolia;
-    const rpcUrl = network === 'base' 
-      ? process.env.NEXT_PUBLIC_BASE_MAINNET_RPC_URL || 'https://mainnet.base.org'
-      : process.env.NEXT_PUBLIC_BASE_SEPOLIA_RPC_URL || 'https://sepolia.base.org';
+    // Get network information
+    const { network, chain, rpcUrl } = getNetworkInfo();
+    
+    // Create a public client for querying the blockchain
+    const publicClient = createPublicClient({
+      chain,
+      transport: http(rpcUrl)
+    });
 
-    // Create a wallet client
-    try {
-      const account = privateKeyToAccount(PRIVATE_KEY as `0x${string}`);
-      const walletClient = createWalletClient({
-        account,
-        chain,
-        transport: http(rpcUrl)
-      });
+    // Prepare the coin parameters
+    const coinParams = prepareCoinParams({
+      name,
+      description,
+      contentUri,
+      imageUri,
+      recipient: recipientAddress as `0x${string}`
+    });
 
-      // Mint the coin
-      const result = await mintBlogCoin({
-        name,
-        description,
-        contentUri,
-        imageUri,
-        recipient: recipientAddress as `0x${string}`,
-        walletClient
-      });
-
-      return NextResponse.json({
-        success: true,
-        coinAddress: result.coinAddress,
-        transactionHash: result.transactionHash
-      });
-    } catch (walletError) {
-      console.error('Wallet or minting error:', walletError);
-      return NextResponse.json(
-        { 
-          error: `Blockchain interaction failed: ${walletError.message}`,
-          details: process.env.NODE_ENV === 'development' ? walletError.toString() : undefined
-        },
-        { status: 500 }
-      );
-    }
-  } catch (error) {
-    console.error('Error minting coin:', error);
+    // Return the prepared parameters to be used for client-side signing
+    return NextResponse.json({
+      success: true,
+      coinParams,
+      network,
+      chainId: chain.id,
+      message: 'Use these parameters with client-side wallet to sign and create the coin'
+    });
+  } catch (error: any) {
+    console.error('Error preparing coin data:', error);
     return NextResponse.json(
       { 
-        error: `Failed to mint coin: ${error.message}`,
+        error: `Failed to prepare coin data: ${error.message || 'Unknown error'}`,
         // Include stack trace in development only
         details: process.env.NODE_ENV === 'development' ? error.stack : undefined
       },
