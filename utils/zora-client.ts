@@ -1,5 +1,3 @@
-'use client';
-
 import { createCoin } from '@zoralabs/coins-sdk';
 import { type Address, createPublicClient, http } from 'viem';
 import { base, baseSepolia } from 'viem/chains';
@@ -17,14 +15,25 @@ const baseMainnetConfig = {
 };
 
 /**
- * Create a public client for the given network
+ * Get network information for Zora Coins minting
+ * This function can be used on both client and server
  */
-export function createBasePublicClient() {
+export function getNetworkInfo() {
   const network = process.env.NEXT_PUBLIC_ZORA_NETWORK || 'base-sepolia';
   const chain = network === 'base' ? base : baseSepolia;
   const rpcUrl = network === 'base' 
     ? process.env.NEXT_PUBLIC_BASE_MAINNET_RPC_URL || 'https://mainnet.base.org'
     : process.env.NEXT_PUBLIC_BASE_SEPOLIA_RPC_URL || 'https://sepolia.base.org';
+  
+  return { network, chain, rpcUrl };
+}
+
+/**
+ * Create a public client for the given network
+ * This function can be used on both client and server
+ */
+export function createBasePublicClient() {
+  const { chain, rpcUrl } = getNetworkInfo();
   
   return createPublicClient({
     chain,
@@ -34,6 +43,7 @@ export function createBasePublicClient() {
 
 /**
  * Prepare coin creation parameters (used for both server and client side minting)
+ * This function can be used on both client and server
  */
 export function prepareCoinParams({
   name,
@@ -70,20 +80,8 @@ export function prepareCoinParams({
 }
 
 /**
- * Get network information for Zora Coins minting
- */
-export function getNetworkInfo() {
-  const network = process.env.NEXT_PUBLIC_ZORA_NETWORK || 'base-sepolia';
-  const chain = network === 'base' ? base : baseSepolia;
-  const rpcUrl = network === 'base' 
-    ? process.env.NEXT_PUBLIC_BASE_MAINNET_RPC_URL || 'https://mainnet.base.org'
-    : process.env.NEXT_PUBLIC_BASE_SEPOLIA_RPC_URL || 'https://sepolia.base.org';
-  
-  return { network, chain, rpcUrl };
-}
-
-/**
  * Mint a new ERC-20 coin on Base using Zora Coins SDK (server-side)
+ * This function can be used on both client and server
  */
 export async function mintBlogCoin({
   name,
