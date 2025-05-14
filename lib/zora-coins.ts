@@ -38,19 +38,21 @@ export interface BlogPostIPFSMetadata {
 /**
  * Create a new ERC-20 coin from a blog post
  * @param params The parameters for creating the coin
- * @returns The transaction hash
+ * @returns The transaction hash and contract address
  */
-export async function createBlogCoin(params: CreateCoinParams): Promise<string> {
+export async function createBlogCoin(params: CreateCoinParams): Promise<{hash: string, contractAddress: string}> {
   try {
     const { name, symbol, metadataUri, ownerAddress } = params;
     
     // Mock implementation since we can't determine exact SDK requirements
     // In a real implementation, you would import and use the createCoin function
     // with the proper parameters from the Zora SDK
+    const mockContractAddress = `0x${Math.random().toString(16).substring(2, 42)}` as `0x${string}`;
+    
     const result = {
       hash: `0x${Math.random().toString(16).substring(2, 10)}`,
       receipt: {},
-      address: `0x${Math.random().toString(16).substring(2, 42)}` as `0x${string}`,
+      address: mockContractAddress,
       deployment: {
         caller: ownerAddress,
         payoutRecipient: ownerAddress,
@@ -59,14 +61,17 @@ export async function createBlogCoin(params: CreateCoinParams): Promise<string> 
         uri: metadataUri,
         name,
         symbol,
-        coin: `0x${Math.random().toString(16).substring(2, 42)}` as `0x${string}`,
+        coin: mockContractAddress,
         pool: `0x${Math.random().toString(16).substring(2, 42)}` as `0x${string}`,
         version: '1.0.0',
       }
     };
     
-    // Return transaction hash
-    return result.hash;
+    // Return transaction hash and contract address
+    return {
+      hash: result.hash,
+      contractAddress: result.address || mockContractAddress
+    };
   } catch (error) {
     console.error('Error creating coin:', error);
     throw error;
