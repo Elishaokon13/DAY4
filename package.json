@@ -9,12 +9,15 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@glennsl/bs-json": "^5.0.4",
     "@privy-io/react-auth": "^2.13.1",
     "@tailwindcss/typography": "^0.5.16",
     "@tiptap/pm": "^2.12.0",
     "@tiptap/react": "^2.12.0",
     "@tiptap/starter-kit": "^2.12.0",
     "@zoralabs/coins-sdk": "^0.1.1",
+    "bs-fetch": "^0.6.2",
+    "bs-platform": "^9.0.2",
     "framer-motion": "^12.11.0",
     "next": "15.3.2",
     "next-themes": "^0.4.6",
