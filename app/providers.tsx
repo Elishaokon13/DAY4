@@ -57,7 +57,6 @@ export default function Providers({
             embeddedWallets: {
               ethereum: {
                 createOnLogin: "users-without-wallets",
-                requireUserPasswordOnCreate: true,
               },
             },
             defaultChain: baseChain,
