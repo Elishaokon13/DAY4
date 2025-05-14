@@ -27,9 +27,9 @@ export default function CoinInfo({ contractAddress, txHash, coinName, coinSymbol
   };
 
   // Generate external links
-  const baseScanUrl = `https://sepolia.basescan.org/address/${contractAddress}`;
-  const dexScreenerUrl = `https://dexscreener.com/base-sepolia/${contractAddress}`;
-  const zoraUrl = `https://testnet.zora.co/token/${contractAddress}`; 
+  const baseScanUrl = `https://basescan.org/address/${contractAddress}`;
+  const dexScreenerUrl = `https://dexscreener.com/base/${contractAddress}`;
+  const zoraUrl = `https://zora.co/token/${contractAddress}`; 
 
   return (
     <div className="w-full mt-6 p-6 border rounded-lg bg-slate-50 dark:bg-slate-900 shadow-sm">
@@ -105,8 +105,8 @@ export default function CoinInfo({ contractAddress, txHash, coinName, coinSymbol
       
       <div className="mt-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 text-yellow-800 dark:text-yellow-300 text-sm rounded-lg">
         <p>
-          <strong>Note:</strong> This is running on Base Sepolia testnet. If your transaction is pending or hasn't been confirmed yet, 
-          you can click the "Redirect to Zora" option when prompted after minting to view your coin on Zora's testnet interface.
+          <strong>Note:</strong> Your coin is being created on Base mainnet. If your transaction is pending or hasn't been confirmed yet, 
+          you can click the "Redirect to Zora" option when prompted after minting to view your coin on Zora's interface.
         </p>
       </div>
     </div>
