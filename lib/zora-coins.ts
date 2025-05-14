@@ -5,7 +5,7 @@
 import { type Address } from 'viem';
 import { createPublicClient, http, createWalletClient, custom } from 'viem';
 import { base } from 'viem/chains';
-import { createCoin, createCoinCall } from '@zoralabs/coins-sdk';
+import { createCoin } from '@zoralabs/coins-sdk';
 
 export interface BlogPostMetadata {
   title: string;
@@ -53,7 +53,7 @@ const publicClient = createPublicClient({
  */
 export async function createBlogCoin(params: CreateCoinParams): Promise<{hash: string, contractAddress: string}> {
   try {
-    const { name, symbol, description, ownerAddress, metadataUri, imageUrl } = params;
+    const { name, symbol, description, ownerAddress, metadataUri } = params;
     
     console.log('Creating coin with params:', JSON.stringify({
       name,
@@ -87,32 +87,19 @@ export async function createBlogCoin(params: CreateCoinParams): Promise<{hash: s
       symbol,
       uri: metadataUri,
       payoutRecipient: ownerAddress,
-      // Optional: initialPurchaseWei: 0n, // No initial purchase
+      // Optional parameters for advanced customization
+      // initialPurchaseWei: 0n, // No initial purchase
     };
     
-    try {
-      // Option A: Direct creation with SDK
-      const result = await createCoin(coinParams, walletClient, publicClient);
-      
-      console.log('Transaction result:', result);
-      return {
-        hash: result.hash,
-        contractAddress: result.address || 'pending', // The address might not be available immediately
-      };
-    } catch (error) {
-      console.error('Error creating coin directly:', error);
-      
-      // Option B: Generate call parameters for UI integration
-      const contractCallParams = await createCoinCall(coinParams);
-      console.log('Contract call params:', contractCallParams);
-      
-      // Return demo data since we can't execute the transaction here
-      return {
-        hash: 'tx_' + Date.now().toString(),
-        contractAddress: '0x' + Array.from({length: 40}, () => 
-          Math.floor(Math.random() * 16).toString(16)).join('')
-      };
-    }
+    // Direct creation with SDK - this will trigger the wallet transaction
+    console.log('Creating coin with Zora SDK...');
+    const result = await createCoin(coinParams, walletClient, publicClient);
+    
+    console.log('Transaction result:', result);
+    return {
+      hash: result.hash,
+      contractAddress: result.address || 'pending',
+    };
   } catch (error) {
     console.error('Error creating coin:', error);
     throw error;
