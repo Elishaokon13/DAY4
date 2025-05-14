@@ -48,8 +48,8 @@ const publicClient = createPublicClient({
 /**
  * Create a new ERC-20 coin from a blog post
  * 
- * This function mints an actual ERC-20 token on Base Sepolia testnet
- * using the Zora Coins SDK.
+ * This function prepares the data for minting an ERC-20 token on Base Sepolia testnet
+ * using the Zora Coins SDK. The actual minting happens through the wallet in the UI.
  * 
  * @param params The parameters for creating the coin
  * @returns The transaction hash and contract address
@@ -66,35 +66,14 @@ export async function createBlogCoin(params: CreateCoinParams): Promise<{hash: s
       metadataUri
     }, null, 2));
     
-    // Use Zora's SDK to create the coin transaction
-    const result = await createCoin(
-      {
-        name,
-        symbol,
-        description,
-        tokenURI: metadataUri,
-        creatorAccount: ownerAddress,
-        payoutRecipient: ownerAddress, // Set the owner as payout recipient
-        fixedFee: BigInt(0), // No additional fee
-        // Use the same value for both to give 100% to the creator
-        mintFeePercentage: 0,
-        mintCap: BigInt(0), // Unlimited minting
-        contractURI: metadataUri
-      },
-      publicClient
-    );
-
-    try {
-      // For now, return information that would be used in actual minting
-      // This will be connected to the wallet through Privy in the UI
-      return {
-        hash: 'tx_' + Date.now().toString(), // This will be replaced with actual hash when connected to wallet
-        contractAddress: 'contract_' + Date.now().toString(), // This will be replaced with actual contract address
-      };
-    } catch (error) {
-      console.error('Error simulating contract:', error);
-      throw new Error('Failed to create coin: simulation error');
-    }
+    // This is where Zora SDK would be used in a full implementation
+    // We're returning placeholder data for now since the actual transaction
+    // will be executed through the wallet provider (Privy) in the UI
+    
+    return {
+      hash: 'tx_' + Date.now().toString(),
+      contractAddress: 'contract_' + Date.now().toString(),
+    };
   } catch (error) {
     console.error('Error creating coin:', error);
     throw error;
@@ -103,6 +82,9 @@ export async function createBlogCoin(params: CreateCoinParams): Promise<{hash: s
 
 /**
  * Open Zora's coin creation interface with prefilled parameters
+ * This is a practical approach that delegates the actual coin creation
+ * to Zora's interface for better user experience
+ * 
  * @param params The parameters for creating the coin
  */
 export function openZoraCoinCreator(params: CreateCoinParams): void {
