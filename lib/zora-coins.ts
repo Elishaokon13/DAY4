@@ -3,6 +3,7 @@
  * Handles creating coins from blog posts
  */
 import { createCoin } from '@zoralabs/coins-sdk';
+import { ethers } from 'ethers';
 import { type Address } from 'viem';
 
 export interface BlogPostMetadata {
@@ -46,7 +47,7 @@ export async function createBlogCoin(params: CreateCoinParams): Promise<{hash: s
     // The creator gets 100% of earnings (1,000,000 = 100%)
     const creatorFeeBps = 1000000;
     
-    // Real implementation using Zora Coins SDK
+    // Coin configuration
     const coinParams = {
       name, 
       symbol,
@@ -62,16 +63,45 @@ export async function createBlogCoin(params: CreateCoinParams): Promise<{hash: s
     
     console.log('Creating coin with params:', JSON.stringify(coinParams, null, 2));
     
-    // Call the Zora SDK's createCoin function
-    // The actual implementation depends on the SDK version
-    // This may require a signer/provider from ethers.js or viem
-    // For now, we'll pass just the coin parameters and rely on the SDK to handle the rest
-    const result = await createCoin(coinParams);
+    // Set up connection to Base
+    // For a production app with real wallet connections, we'd get this from the wallet directly
+    // Here we're setting up a fallback for development/testing
+    let provider: ethers.providers.Web3Provider;
+    let signer: ethers.Signer;
+    
+    // Check if window.ethereum exists (i.e., we're in a browser with MetaMask or similar)
+    if (typeof window !== 'undefined' && (window as any).ethereum) {
+      provider = new ethers.providers.Web3Provider((window as any).ethereum);
+      signer = provider.getSigner();
+      
+      // Request account access if needed
+      await provider.send('eth_requestAccounts', []);
+    } else {
+      // Fallback to a JSON RPC provider (mainnet Base) - this won't work for transactions without a private key
+      provider = new ethers.providers.JsonRpcProvider('https://mainnet.base.org');
+      
+      // This is just for testing - in production you'd never handle private keys this way
+      // Instead, you'd get the signer from the wallet provider (like MetaMask or Privy)
+      console.warn('No wallet detected - coin creation will fail without a private key');
+      
+      // Development-only fallback that won't work in production
+      const dummyWallet = ethers.Wallet.createRandom().connect(provider);
+      signer = dummyWallet;
+    }
+    
+    // Call the Zora SDK's createCoin function with the required parameters:
+    // 1. Coin configuration
+    // 2. Signer to sign the transaction
+    // 3. Options (optional)
+    const result = await createCoin(
+      coinParams,
+      signer,
+      { log: true } // Enable logging for debugging
+    );
     
     console.log('Coin creation result:', JSON.stringify(result, null, 2));
     
-    // The actual Zora SDK returns an object with hash for transaction hash
-    // and may have an address field for the deployed contract
+    // Return transaction hash and contract address
     return {
       hash: result.hash,
       contractAddress: result.address || '0x'
