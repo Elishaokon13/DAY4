@@ -67,7 +67,7 @@ export async function mintBlogCoin({
       uri: imageUri, // Use generated image as the coin's metadata URI
       animationUri: contentUri, // Use blog content as animation URI
       payoutRecipient: recipient,
-      initialPurchaseWei: 0n // No initial purchase required
+      initialPurchaseWei: BigInt(0) // No initial purchase required
     };
     
     // Create and deploy the coin
