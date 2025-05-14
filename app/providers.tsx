@@ -55,9 +55,10 @@ export default function Providers({
               showWalletLoginFirst: true,
             },
             embeddedWallets: {
-              createOnLogin: "users-without-wallets",
-              requireUserPasswordOnCreate: true,
-              noPromptOnSignature: false
+              ethereum: {
+                createOnLogin: "users-without-wallets",
+                requireUserPasswordOnCreate: true,
+              },
             },
             defaultChain: baseChain,
             supportedChains: [baseChain]
