@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createPublicClient, http } from 'viem';
 import { base, baseSepolia } from 'viem/chains';
-import { prepareCoinParams, getNetworkInfo } from '@/utils/zora-client';
+import { prepareCoinParams } from '@/utils/zora-client';
 
 export async function POST(request: NextRequest) {
   try {
@@ -22,8 +22,12 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Get network information
-    const { network, chain, rpcUrl } = getNetworkInfo();
+    // Determine which network to use (duplicating logic instead of using the client function)
+    const network = process.env.NEXT_PUBLIC_ZORA_NETWORK || 'base-sepolia';
+    const chain = network === 'base' ? base : baseSepolia;
+    const rpcUrl = network === 'base' 
+      ? process.env.NEXT_PUBLIC_BASE_MAINNET_RPC_URL || 'https://mainnet.base.org'
+      : process.env.NEXT_PUBLIC_BASE_SEPOLIA_RPC_URL || 'https://sepolia.base.org';
     
     // Create a public client for querying the blockchain
     const publicClient = createPublicClient({
