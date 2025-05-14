@@ -18,7 +18,7 @@ export default function Home() {
               Write & Mint Your Blog as a Coin
             </h1>
             <p className="mb-8 text-lg text-gray-600 dark:text-gray-300">
-              Create a blog post and mint it as an ERC-20 token on Base using Zora Coins SDK.
+              Create a blog post and mint it as an ERC-20 token on Base Sepolia testnet using Zora Coins SDK.
             </p>
           </div>
 
@@ -53,6 +53,9 @@ export default function Home() {
             >
               Privy
             </a>
+          </p>
+          <p className="mt-2 text-xs">
+            Running on Base Sepolia testnet
           </p>
         </div>
       </footer>
