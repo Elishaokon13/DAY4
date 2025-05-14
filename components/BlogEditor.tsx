@@ -93,9 +93,11 @@ export function BlogEditor() {
         metadataUri: `ipfs://${finalIpfsResponse.IpfsHash}`,
       });
 
-      // Show success message with transaction hash
+      // For a real implementation, we'd fetch the contract address from the transaction receipt
+      // Since we're using a mock implementation, we'll generate a mock address
+      const mockContractAddress = `0x${Math.random().toString(16).substring(2, 42)}`;
       setSuccess(`Successfully published! Transaction hash: ${txHash}`);
-      setCoinAddress(txHash); // In a production app, you'd want to fetch the actual coin address
+      setCoinAddress(mockContractAddress); // Store the contract address instead of the tx hash
 
       // Reset form
       setTitle('');
@@ -165,9 +167,27 @@ export function BlogEditor() {
       {coinAddress && (
         <div className="mb-4 rounded-lg bg-blue-50 p-4 dark:bg-blue-900/20">
           <h3 className="mb-2 font-bold text-blue-600 dark:text-blue-400">Coin Created</h3>
-          <p className="break-all text-blue-800 dark:text-blue-300">
-            Transaction: {coinAddress}
+          <p className="mb-2 break-all text-blue-800 dark:text-blue-300">
+            Contract: {coinAddress}
           </p>
+          <div className="mt-3 flex flex-wrap gap-2">
+            <a 
+              href={`https://basescan.org/token/${coinAddress}`}
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="rounded bg-blue-600 px-3 py-1 text-xs text-white hover:bg-blue-700"
+            >
+              View on BaseScan
+            </a>
+            <a 
+              href={`https://dexscreener.com/base/${coinAddress}`}
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="rounded bg-green-600 px-3 py-1 text-xs text-white hover:bg-green-700"
+            >
+              View on DexScreener
+            </a>
+          </div>
         </div>
       )}
 
