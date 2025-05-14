@@ -1,22 +1,66 @@
 import { NextRequest, NextResponse } from 'next/server';
-import pinataSDK from 'pinata-sdk';
 import { v4 as uuidv4 } from 'uuid';
-import fetch from 'node-fetch';
+import axios from 'axios';
+import FormData from 'form-data';
 
-// Initialize Pinata client
-const pinata = pinataSDK(
-  process.env.PINATA_API_KEY || '',
-  process.env.PINATA_API_SECRET || ''
-);
-
-// Helper function to fetch and convert image to File object
+// Helper function to fetch and convert image to Buffer
 async function fetchImageToBuffer(imageUrl: string): Promise<Buffer> {
-  const response = await fetch(imageUrl);
-  if (!response.ok) {
-    throw new Error(`Failed to fetch image: ${response.statusText}`);
-  }
-  const arrayBuffer = await response.arrayBuffer();
-  return Buffer.from(arrayBuffer);
+  const response = await axios.get(imageUrl, { responseType: 'arraybuffer' });
+  return Buffer.from(response.data);
+}
+
+// Direct Pinata API functions
+async function pinJSONToIPFS(jsonBody: any, metadata: any) {
+  const pinataApiKey = process.env.PINATA_API_KEY || '';
+  const pinataApiSecret = process.env.PINATA_API_SECRET || '';
+  
+  const response = await axios.post(
+    'https://api.pinata.cloud/pinning/pinJSONToIPFS',
+    {
+      pinataMetadata: metadata,
+      pinataContent: jsonBody
+    },
+    {
+      headers: {
+        'Content-Type': 'application/json',
+        'pinata_api_key': pinataApiKey,
+        'pinata_secret_api_key': pinataApiSecret
+      }
+    }
+  );
+  
+  return response.data;
+}
+
+async function pinFileToIPFS(fileBuffer: Buffer, metadata: any) {
+  const pinataApiKey = process.env.PINATA_API_KEY || '';
+  const pinataApiSecret = process.env.PINATA_API_SECRET || '';
+  
+  const formData = new FormData();
+  
+  // Add the file to form data
+  formData.append('file', fileBuffer, {
+    filename: metadata.name,
+    contentType: 'image/png' // Assuming PNG for simplicity
+  });
+  
+  // Add metadata
+  formData.append('pinataMetadata', JSON.stringify(metadata));
+  
+  const response = await axios.post(
+    'https://api.pinata.cloud/pinning/pinFileToIPFS',
+    formData,
+    {
+      maxBodyLength: Infinity,
+      headers: {
+        'Content-Type': `multipart/form-data; boundary=${formData.getBoundary()}`,
+        'pinata_api_key': pinataApiKey,
+        'pinata_secret_api_key': pinataApiSecret
+      }
+    }
+  );
+  
+  return response.data;
 }
 
 export async function POST(request: NextRequest) {
@@ -42,7 +86,7 @@ export async function POST(request: NextRequest) {
       }
     };
     
-    const contentResponse = await pinata.pinJSONToIPFS({
+    const contentResponse = await pinJSONToIPFS({
       content: content,
       timestamp: new Date().toISOString()
     }, contentMetadata);
@@ -57,11 +101,6 @@ export async function POST(request: NextRequest) {
         // Fetch the image from provided URL
         const imageBuffer = await fetchImageToBuffer(imageUri);
         
-        // Create a readable stream from the buffer
-        const stream = require('stream');
-        const imageStream = new stream.PassThrough();
-        imageStream.end(imageBuffer);
-        
         // Upload image to IPFS
         const imageMetadata = {
           name: `BlogCoinImage_${uniqueId}`,
@@ -71,7 +110,7 @@ export async function POST(request: NextRequest) {
           }
         };
         
-        const imageResponse = await pinata.pinFileToIPFS(imageStream, imageMetadata);
+        const imageResponse = await pinFileToIPFS(imageBuffer, imageMetadata);
         imageIpfsUri = `ipfs://${imageResponse.IpfsHash}`;
       } catch (error) {
         console.error('Error uploading image to IPFS:', error);
