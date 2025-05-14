@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { http } from 'viem';
 import { base, baseSepolia } from 'viem/chains';
 import { prepareCoinParams } from '@/utils/zora-client';
 
@@ -26,9 +25,6 @@ export async function POST(request: NextRequest) {
     // Default to Base mainnet (instead of Sepolia)
     const network = process.env.NEXT_PUBLIC_ZORA_NETWORK || 'base';
     const chain = network === 'base-sepolia' ? baseSepolia : base;
-    const rpcUrl = network === 'base-sepolia' 
-      ? process.env.NEXT_PUBLIC_BASE_SEPOLIA_RPC_URL || 'https://sepolia.base.org'
-      : process.env.NEXT_PUBLIC_BASE_MAINNET_RPC_URL || 'https://mainnet.base.org';
     
     // Prepare the coin parameters
     const coinParams = prepareCoinParams({
