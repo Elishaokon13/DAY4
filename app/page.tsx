@@ -8,10 +8,15 @@ import BlogEditor from '@/components/ui/blog-editor';
 import GradientButton from '@/components/ui/gradient-button';
 import CoinDisplay from '@/components/ui/coin-display';
 import useAuth from '@/hooks/use-auth';
+import { usePrivy } from '@privy-io/react-auth';
+import { createCoin } from '@zoralabs/coins-sdk';
+import { createWalletClient, http, createPublicClient } from 'viem';
+import { baseSepolia, base } from 'viem/chains';
 
 export default function Home() {
   // Auth state
   const { isAuthenticated, address } = useAuth();
+  const { user } = usePrivy();
   
   // Blog content state
   const [blogContent, setBlogContent] = useState('');
@@ -103,14 +108,14 @@ export default function Home() {
     }
   };
 
-  // Mint coin using Zora Coins SDK
+  // Mint coin using Zora Coins SDK with client wallet
   const mintCoin = async () => {
     if (!generatedData) {
       await generateMetadata();
       return;
     }
 
-    if (!isAuthenticated) {
+    if (!isAuthenticated || !user?.wallet) {
       toast.error('Please connect your wallet first!');
       return;
     }
@@ -122,9 +127,9 @@ export default function Home() {
       // Upload to IPFS first
       const { contentUri, imageUri } = await uploadToIPFS();
       
-      toast.loading('Minting your coin...', { id: 'minting' });
+      toast.loading('Preparing transaction...', { id: 'minting' });
       
-      // Call minting API
+      // Get coin parameters from API
       const response = await fetch('/api/mint-coin', {
         method: 'POST',
         headers: {
@@ -140,22 +145,64 @@ export default function Home() {
       });
 
       if (!response.ok) {
-        throw new Error('Failed to mint coin');
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to prepare transaction');
       }
 
-      const { coinAddress } = await response.json();
+      const { coinParams, chainId } = await response.json();
+      
+      toast.loading('Please confirm the transaction in your wallet...', { id: 'minting' });
+      
+      // Determine which network to use
+      const chain = chainId === 8453 ? base : baseSepolia;
+      
+      // Create wallet client using Privy's embedded wallet
+      const walletClient = createWalletClient({
+        account: user.wallet.address as `0x${string}`,
+        chain,
+        transport: http()
+      });
+      
+      // Create public client for the same chain
+      const publicClient = createPublicClient({
+        chain,
+        transport: http()
+      });
+      
+      // Request signature through Privy
+      const result = await createCoin(
+        coinParams, 
+        {
+          async signTypedData({ account, domain, types, primaryType, message }) {
+            // Use Privy to sign
+            const signature = await user.wallet?.signTypedData({
+              domain,
+              types,
+              primaryType,
+              message,
+            });
+            
+            return signature as `0x${string}`;
+          },
+          account: {
+            address: user.wallet.address as `0x${string}`
+          },
+          chain
+        }, 
+        publicClient
+      );
       
       setMintedCoin({
-        address: coinAddress,
+        address: result.address,
         name: generatedData.coinName,
         description: generatedData.coinDescription,
         imageUri: imageUri
       });
       
       toast.success('Your blog post has been minted as a coin!', { id: 'minting' });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error minting coin:', error);
-      toast.error('Failed to mint coin. Please try again.', { id: 'minting' });
+      toast.error(`Failed to mint coin: ${error.message || 'Unknown error'}`, { id: 'minting' });
     } finally {
       setIsMinting(false);
     }
