@@ -1,116 +1,61 @@
 "use client";
 
-import {
-  useMiniKit,
-  useAddFrame,
-  useOpenUrl,
-} from "@coinbase/onchainkit/minikit";
-// import {
-//   Name,
-//   Identity,
-//   Address,
-//   Avatar,
-//   EthBalance,
-// } from "@coinbase/onchainkit/identity";
-// import {
-//   ConnectWallet,
-//   Wallet,
-//   WalletDropdown,
-//   WalletDropdownDisconnect,
-// } from "@coinbase/onchainkit/wallet";
-import { useEffect, useMemo, useState, useCallback } from "react";
-import { Button } from "@/components/ui/button";
-import { ZoraWalletInput } from "@/components/ZoraWalletInput";
-import { Icon } from "@/components/Icon";
+import { Header } from '@/components/Header';
+import { BlogEditor } from '@/components/BlogEditor';
+import { usePrivy } from '@privy-io/react-auth';
 
-export default function App() {
-  const { setFrameReady, isFrameReady, context } = useMiniKit();
-  const [frameAdded, setFrameAdded] = useState(false);
-  
-
-  const addFrame = useAddFrame();
-  const openUrl = useOpenUrl();
-
-  useEffect(() => {
-    if (!isFrameReady) {
-      setFrameReady();
-    }
-  }, [setFrameReady, isFrameReady]);
-
-  const handleAddFrame = useCallback(async () => {
-    const frameAdded = await addFrame();
-    setFrameAdded(Boolean(frameAdded));
-  }, [addFrame]);
-
-  const saveFrameButton = useMemo(() => {
-    if (context && !context.client.added) {
-      return (
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={handleAddFrame}
-          className="text-[var(--app-accent)] p-4"
-      
-        >
-          <Icon name="plus" size="sm" />
-          Save Frame
-        </Button>
-      );
-    }
-
-    if (frameAdded) {
-      return (
-        <div className="flex items-center space-x-1 text-sm font-medium text-[#0052FF] animate-fade-out">
-          <Icon name="check" size="sm" className="text-[#0052FF]" />
-          <span>Saved</span>
-        </div>
-      );
-    }
-
-    return null;
-  }, [context, frameAdded, handleAddFrame]);
+export default function Home() {
+  const { ready } = usePrivy();
 
   return (
-    <div className="flex flex-col min-h-screen font-sans text-[var(--app-foreground)] mini-app-theme from-[var(--app-background)] to-[var(--app-gray)]">
-      <div className="w-full max-w-md mx-auto px-4 py-3">
-        <header className="flex justify-between items-center mb-3 h-11">
-          <div>
-            <div className="flex items-center space-x-2">
-              {/* <Wallet className="z-10">
-                <ConnectWallet>
-                  <Name className="text-inherit" />
-                </ConnectWallet>
-                <WalletDropdown>
-                  <Identity className="px-4 pt-3 pb-2" hasCopyAddressOnClick>
-                    <Avatar />
-                    <Name />
-                    <Address />
-                    <EthBalance />
-                  </Identity>
-                  <WalletDropdownDisconnect />
-                </WalletDropdown>
-              </Wallet> */}
-            </div>
+    <div className="flex min-h-screen flex-col bg-gray-50 dark:bg-gray-950">
+      <Header />
+      
+      <main className="flex-1 py-8">
+        <div className="container mx-auto px-4">
+          <div className="mx-auto max-w-3xl text-center">
+            <h1 className="mb-4 text-3xl font-bold text-gray-900 dark:text-white sm:text-4xl">
+              Write & Mint Your Blog as a Coin
+            </h1>
+            <p className="mb-8 text-lg text-gray-600 dark:text-gray-300">
+              Create a blog post and mint it as an ERC-20 token on Base using Zora Coins SDK.
+            </p>
           </div>
-          <div>{saveFrameButton}</div>
-        </header>
 
-        <main className="flex-1">
-        <ZoraWalletInput displayName={context?.user?.displayName || ''}/>
-        
-        </main>
+          {ready ? (
+            <BlogEditor />
+          ) : (
+            <div className="flex justify-center">
+              <div className="h-10 w-10 animate-spin rounded-full border-4 border-blue-500 border-t-transparent"></div>
+            </div>
+          )}
+        </div>
+      </main>
 
-        <footer className="mt-2 pt-4 flex justify-center">
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-[var(--ock-text-foreground-muted)] text-xs"
-            onClick={() => openUrl("https://base.org/builders/minikit")}
-          >
-            Built on Base with MiniKit
-          </Button>
-        </footer>
-      </div>
+      <footer className="border-t border-gray-200 bg-white py-6 dark:border-gray-800 dark:bg-gray-900">
+        <div className="container mx-auto px-4 text-center text-sm text-gray-500 dark:text-gray-400">
+          <p>
+            Powered by{' '}
+            <a
+              href="https://zora.co/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-medium text-blue-600 hover:underline dark:text-blue-400"
+            >
+              Zora
+            </a>{' '}
+            and{' '}
+            <a
+              href="https://privy.io/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-medium text-blue-600 hover:underline dark:text-blue-400"
+            >
+              Privy
+            </a>
+          </p>
+        </div>
+      </footer>
     </div>
   );
 }
