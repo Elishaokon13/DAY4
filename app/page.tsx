@@ -171,9 +171,10 @@ export default function Home() {
       });
       
       toast.success('Your blog post has been minted as a coin!', { id: 'minting' });
-    } catch (error: any) {
+    } catch (error) {
       console.error('Error minting coin:', error);
-      toast.error(`Failed to mint coin: ${error.message || 'Unknown error'}`, { id: 'minting' });
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      toast.error(`Failed to mint coin: ${errorMessage}`, { id: 'minting' });
     } finally {
       setIsMinting(false);
     }
