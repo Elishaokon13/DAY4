@@ -4,7 +4,7 @@
  */
 import { type Address } from 'viem';
 import { createPublicClient, http, createWalletClient, custom } from 'viem';
-import { baseSepolia } from 'viem/chains';
+import { base } from 'viem/chains';
 import { createCoin, createCoinCall } from '@zoralabs/coins-sdk';
 
 export interface BlogPostMetadata {
@@ -28,6 +28,7 @@ export interface CreateCoinParams {
 export interface BlogPostIPFSMetadata {
   name: string;
   description: string;
+  image: string;
   external_url: string;
   attributes: Array<{
     trait_type: string;
@@ -36,23 +37,23 @@ export interface BlogPostIPFSMetadata {
   content: string;
 }
 
-// Create a public client for Base Sepolia testnet
+// Create a public client for Base mainnet
 const publicClient = createPublicClient({
-  chain: baseSepolia,
+  chain: base,
   transport: http(),
 });
 
 /**
  * Create a new ERC-20 coin from a blog post using Zora Coins SDK
  * 
- * This function uses the Zora Coins SDK to create a new coin on Base Sepolia testnet.
+ * This function uses the Zora Coins SDK to create a new coin on Base mainnet.
  * 
  * @param params The parameters for creating the coin
  * @returns The transaction hash and contract address
  */
 export async function createBlogCoin(params: CreateCoinParams): Promise<{hash: string, contractAddress: string}> {
   try {
-    const { name, symbol, description, ownerAddress, metadataUri } = params;
+    const { name, symbol, description, ownerAddress, metadataUri, imageUrl } = params;
     
     console.log('Creating coin with params:', JSON.stringify({
       name,
@@ -69,7 +70,7 @@ export async function createBlogCoin(params: CreateCoinParams): Promise<{hash: s
     
     // Create a wallet client using the browser's provider
     const walletClient = createWalletClient({
-      chain: baseSepolia,
+      chain: base,
       transport: custom(window.ethereum)
     });
     
@@ -123,18 +124,19 @@ export async function createBlogCoin(params: CreateCoinParams): Promise<{hash: s
  * @param params The parameters for creating the coin
  */
 export function openZoraCoinCreator(params: CreateCoinParams): void {
-  const { name, symbol, description, metadataUri } = params;
+  const { name, symbol, description, metadataUri, imageUrl } = params;
   
   // URL encode the parameters
   const queryParams = new URLSearchParams({
     name,
     symbol,
     description,
-    uri: metadataUri
+    uri: metadataUri,
+    ...(imageUrl && { image: imageUrl })
   }).toString();
   
-  // Open Zora's testnet create coin interface with pre-filled parameters
-  window.open(`https://testnet.zora.co/create/coin?${queryParams}`, '_blank');
+  // Open Zora's coin creation interface with pre-filled parameters (now on mainnet)
+  window.open(`https://zora.co/create/coin?${queryParams}`, '_blank');
 }
 
 /**
@@ -143,9 +145,13 @@ export function openZoraCoinCreator(params: CreateCoinParams): void {
  * @returns Formatted metadata for IPFS
  */
 export function formatBlogPostForIPFS(post: BlogPostMetadata): BlogPostIPFSMetadata {
+  // Default placeholder image if none is provided
+  const defaultImage = "https://picsum.photos/800/800"; // Random placeholder image
+  
   return {
     name: post.title,
     description: post.content.substring(0, 200) + '...',
+    image: defaultImage, // Required by Zora
     external_url: `ipfs://${post.ipfsHash}`,
     attributes: [
       {
