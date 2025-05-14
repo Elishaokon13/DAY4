@@ -2,7 +2,6 @@
 
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
-import { Toaster } from "react-hot-toast";
 import "./globals.css";
 import Providers from "./providers";
 
@@ -25,7 +24,6 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={`${inter.variable} font-sans antialiased`}>
         <Providers>
-          <Toaster position="bottom-right" />
           {children}
         </Providers>
       </body>
