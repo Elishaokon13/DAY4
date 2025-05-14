@@ -85,8 +85,8 @@ export function openZoraCoinCreator(params: CreateCoinParams): void {
     uri: metadataUri
   }).toString();
   
-  // Open Zora's create coin interface on Base Sepolia testnet with pre-filled parameters
-  window.open(`https://sepolia.base.org/zora/create/coin?${queryParams}`, '_blank');
+  // Open Zora's testnet create coin interface with pre-filled parameters
+  window.open(`https://testnet.zora.co/create/coin?${queryParams}`, '_blank');
 }
 
 /**
