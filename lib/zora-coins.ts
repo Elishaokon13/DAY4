@@ -3,10 +3,9 @@
  * Handles creating coins from blog posts
  */
 import { type Address } from 'viem';
-// Remove unused imports
-// import { createPublicClient, http } from 'viem';
-// import { baseSepolia } from 'viem/chains';
-// import { createCoin } from '@zoralabs/coins-sdk';
+import { createPublicClient, http, createWalletClient, custom } from 'viem';
+import { baseSepolia } from 'viem/chains';
+import { createCoin } from '@zoralabs/coins-sdk';
 
 // Remove global interface declaration to avoid conflicts
 // The window.ethereum property is handled directly in the code
@@ -40,17 +39,17 @@ export interface BlogPostIPFSMetadata {
   content: string;
 }
 
-// Remove unused public client variable
-// const publicClient = createPublicClient({
-//   chain: baseSepolia,
-//   transport: http(),
-// });
+// Create a public client for Base Sepolia testnet
+const publicClient = createPublicClient({
+  chain: baseSepolia,
+  transport: http(),
+});
 
 /**
- * Create a new ERC-20 coin from a blog post
+ * Create a new ERC-20 coin from a blog post using Zora Coins SDK
  * 
- * This function prepares the data for minting an ERC-20 token on Base Sepolia testnet
- * using the Zora Coins SDK. The actual minting happens through the wallet in the UI.
+ * This function creates an actual transaction to mint an ERC-20 token
+ * on Base Sepolia testnet.
  * 
  * @param params The parameters for creating the coin
  * @returns The transaction hash and contract address
@@ -67,13 +66,48 @@ export async function createBlogCoin(params: CreateCoinParams): Promise<{hash: s
       metadataUri
     }, null, 2));
     
-    // This is where Zora SDK would be used in a full implementation
-    // We're returning placeholder data for now since the actual transaction
-    // will be executed through the wallet provider (Privy) in the UI
+    // Check if window.ethereum is available
+    if (typeof window === 'undefined' || !window.ethereum) {
+      throw new Error('Ethereum provider not available. Please make sure you have a wallet installed.');
+    }
     
+    // Create a wallet client using the browser's provider
+    const walletClient = createWalletClient({
+      chain: baseSepolia,
+      transport: custom(window.ethereum)
+    });
+    
+    // Request account access
+    const [address] = await walletClient.requestAddresses();
+    
+    if (address.toLowerCase() !== ownerAddress.toLowerCase()) {
+      throw new Error('Connected wallet address does not match the owner address.');
+    }
+    
+    // Use Zora's SDK to create the coin
+    const { request } = await createCoin({
+      name,
+      symbol,
+      description,
+      tokenURI: metadataUri,
+      creatorAccount: ownerAddress,
+      payoutRecipient: ownerAddress, // Set the owner as payout recipient
+      fixedFee: BigInt(0), // No additional fee
+      mintFeePercentage: 0,
+      mintCap: BigInt(0), // Unlimited minting
+      contractURI: metadataUri
+    }, publicClient);
+    
+    // Send the transaction
+    const hash = await walletClient.writeContract(request);
+    console.log('Transaction hash:', hash);
+    
+    // For demo purposes, we're returning the hash immediately
+    // In production, you would wait for transaction confirmation
+    // and extract the contract address from the receipt
     return {
-      hash: 'tx_' + Date.now().toString(),
-      contractAddress: 'contract_' + Date.now().toString(),
+      hash: hash,
+      contractAddress: 'pending_contract' // This would be extracted from transaction receipt in production
     };
   } catch (error) {
     console.error('Error creating coin:', error);
