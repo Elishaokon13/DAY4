@@ -72,60 +72,83 @@ export default function useAuth(): AuthState {
     }
 
     try {
-      // Request wallet to switch to Base network
-      await user.wallet.switchChain(parseInt(BASE_MAINNET_CHAIN_ID, 16));
+      // Get the Ethereum provider from the wallet
+      const provider = await user.wallet.getEthereumProvider();
       
-      // Verify the switch was successful
-      const chainId = await user.wallet.getChainId();
-      const success = chainId === BASE_MAINNET_CHAIN_ID;
-      
-      if (success) {
-        toast.success('Successfully connected to Base network');
-        setIsConnectedToBaseChain(true);
-      } else {
-        toast.error('Failed to switch to Base network');
+      if (!provider) {
+        toast.error('Ethereum provider not available');
+        return false;
       }
       
-      return success;
-    } catch (error: any) {
-      console.error('Error switching network:', error);
-      
-      // Check if the error is because the chain hasn't been added
-      if (error.message?.includes('chain hasn\'t been added')) {
-        try {
-          // Add the Base chain if it's not added
-          await user.wallet.addChain({
-            chainId: parseInt(BASE_MAINNET_CHAIN_ID, 16),
-            chainName: 'Base',
-            nativeCurrency: {
-              name: 'Ethereum',
-              symbol: 'ETH',
-              decimals: 18
-            },
-            rpcUrls: ['https://mainnet.base.org'],
-            blockExplorerUrls: ['https://basescan.org']
-          });
-          
-          // Try switching again
-          await user.wallet.switchChain(parseInt(BASE_MAINNET_CHAIN_ID, 16));
-          
-          const chainId = await user.wallet.getChainId();
-          const success = chainId === BASE_MAINNET_CHAIN_ID;
-          
-          if (success) {
-            toast.success('Successfully added and connected to Base network');
-            setIsConnectedToBaseChain(true);
-          }
-          
-          return success;
-        } catch (addError) {
-          console.error('Error adding Base chain:', addError);
-          toast.error('Failed to add Base network to your wallet');
-          return false;
+      // Request provider to switch to Base network
+      try {
+        await provider.request({
+          method: 'wallet_switchEthereumChain',
+          params: [{ chainId: BASE_MAINNET_CHAIN_ID }],
+        });
+        
+        // Verify the switch was successful
+        const chainId = await user.wallet.getChainId();
+        const success = chainId === BASE_MAINNET_CHAIN_ID;
+        
+        if (success) {
+          toast.success('Successfully connected to Base network');
+          setIsConnectedToBaseChain(true);
+        } else {
+          toast.error('Failed to switch to Base network');
         }
+        
+        return success;
+      } catch (switchError: any) {
+        // This error code indicates that the chain has not been added to the wallet
+        if (switchError.code === 4902 || switchError.message?.includes('chain hasn\'t been added')) {
+          try {
+            await provider.request({
+              method: 'wallet_addEthereumChain',
+              params: [
+                {
+                  chainId: BASE_MAINNET_CHAIN_ID,
+                  chainName: 'Base',
+                  nativeCurrency: {
+                    name: 'Ethereum',
+                    symbol: 'ETH',
+                    decimals: 18
+                  },
+                  rpcUrls: ['https://mainnet.base.org'],
+                  blockExplorerUrls: ['https://basescan.org']
+                }
+              ]
+            });
+            
+            // Try switching again after adding the chain
+            await provider.request({
+              method: 'wallet_switchEthereumChain',
+              params: [{ chainId: BASE_MAINNET_CHAIN_ID }],
+            });
+            
+            const chainId = await user.wallet.getChainId();
+            const success = chainId === BASE_MAINNET_CHAIN_ID;
+            
+            if (success) {
+              toast.success('Successfully added and connected to Base network');
+              setIsConnectedToBaseChain(true);
+            }
+            
+            return success;
+          } catch (addError) {
+            console.error('Error adding Base chain:', addError);
+            toast.error('Failed to add Base network to your wallet');
+            return false;
+          }
+        }
+        
+        console.error('Error switching network:', switchError);
+        toast.error(`Failed to switch to Base network: ${switchError.message || 'Unknown error'}`);
+        return false;
       }
-      
-      toast.error(`Failed to switch to Base network: ${error.message || 'Unknown error'}`);
+    } catch (error: any) {
+      console.error('Error accessing Ethereum provider:', error);
+      toast.error(`Failed to access wallet provider: ${error.message || 'Unknown error'}`);
       return false;
     }
   };
