@@ -53,18 +53,9 @@ export default function Providers({
               accentColor: "#3b82f6", // More vibrant blue
               logo: "https://raw.githubusercontent.com/cosmic-inquisitor/crypto-icons/2c5f70daefa77447db681304cbba6ae94e4f393b/svg/base.svg",
               showWalletLoginFirst: true,
-              desktopLayout: "dialog",
-              modalBackdrop: true,
-              modalBorderRadius: "20px",
-              // More modern styling
-              defaultButtonStyle: {
-                borderRadius: "15px",
-                backgroundColor: "#3b82f6"
-              }
             },
             embeddedWallets: {
               createOnLogin: "users-without-wallets",
-              preferencesInStorage: true,
               requireUserPasswordOnCreate: true,
               noPromptOnSignature: false
             },
