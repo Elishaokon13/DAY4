@@ -2,9 +2,8 @@
  * Zora Coins SDK utility functions
  * Handles creating coins from blog posts
  */
-// Import will be needed when implementing actual SDK functionality
-// import { createCoin } from '@zoralabs/coins-sdk';
-import type { Address } from 'viem';
+import { createCoin, CreateCoinOptions } from '@zoralabs/coins-sdk';
+import { type Address } from 'viem';
 
 export interface BlogPostMetadata {
   title: string;
@@ -42,35 +41,36 @@ export interface BlogPostIPFSMetadata {
  */
 export async function createBlogCoin(params: CreateCoinParams): Promise<{hash: string, contractAddress: string}> {
   try {
-    const { name, symbol, metadataUri, ownerAddress } = params;
+    const { name, symbol, description, ownerAddress, imageUrl, metadataUri } = params;
     
-    // Mock implementation since we can't determine exact SDK requirements
-    // In a real implementation, you would import and use the createCoin function
-    // with the proper parameters from the Zora SDK
-    const mockContractAddress = `0x${Math.random().toString(16).substring(2, 42)}` as `0x${string}`;
+    // The creator gets 100% of earnings (1,000,000 = 100%)
+    const creatorFeeBps = 1000000;
     
-    const result = {
-      hash: `0x${Math.random().toString(16).substring(2, 10)}`,
-      receipt: {},
-      address: mockContractAddress,
-      deployment: {
-        caller: ownerAddress,
-        payoutRecipient: ownerAddress,
-        platformReferrer: '0x0000000000000000000000000000000000000000' as `0x${string}`,
-        currency: '0x0000000000000000000000000000000000000000' as `0x${string}`,
-        uri: metadataUri,
-        name,
-        symbol,
-        coin: mockContractAddress,
-        pool: `0x${Math.random().toString(16).substring(2, 42)}` as `0x${string}`,
-        version: '1.0.0',
-      }
+    // Real implementation using Zora Coins SDK
+    const coinParams: CreateCoinOptions = {
+      name, 
+      symbol,
+      description,
+      ownerAddress,
+      payoutRecipient: ownerAddress, // Set the owner as the payout recipient
+      iconUrl: imageUrl,
+      metadataUri,
+      contractAdmin: ownerAddress,
+      creatorFeeBps,
+      network: 'base', // Base mainnet
     };
     
-    // Return transaction hash and contract address
+    console.log('Creating coin with params:', JSON.stringify(coinParams, null, 2));
+    
+    // Call the Zora SDK's createCoin function
+    const result = await createCoin(coinParams);
+    
+    console.log('Coin creation result:', JSON.stringify(result, null, 2));
+    
+    // Return transaction hash and contract address (if available)
     return {
       hash: result.hash,
-      contractAddress: result.address || mockContractAddress
+      contractAddress: result.address || '0x'
     };
   } catch (error) {
     console.error('Error creating coin:', error);
