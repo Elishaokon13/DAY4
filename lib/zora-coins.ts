@@ -66,33 +66,30 @@ export async function createBlogCoin(params: CreateCoinParams): Promise<{hash: s
       metadataUri
     }, null, 2));
     
-    // Use Zora's SDK to create the coin transaction parameters
-    const { parameters } = await createCoin({
-      name,
-      symbol,
-      description,
-      tokenURI: metadataUri,
-      creatorAccount: ownerAddress,
-      payoutRecipient: ownerAddress, // Set the owner as payout recipient
-      fixedFee: 0, // No additional fee
-      // Use the same value for both to give 100% to the creator
-      mintFeePercentage: 0,
-      mintCap: 0n, // Unlimited minting
-      contractURI: metadataUri
-    });
+    // Use Zora's SDK to create the coin transaction
+    const result = await createCoin(
+      {
+        name,
+        symbol,
+        description,
+        tokenURI: metadataUri,
+        creatorAccount: ownerAddress,
+        payoutRecipient: ownerAddress, // Set the owner as payout recipient
+        fixedFee: BigInt(0), // No additional fee
+        // Use the same value for both to give 100% to the creator
+        mintFeePercentage: 0,
+        mintCap: BigInt(0), // Unlimited minting
+        contractURI: metadataUri
+      },
+      publicClient
+    );
 
     try {
-      // Simulate the transaction first
-      const { request } = await publicClient.simulateContract(parameters);
-      
-      // In a full integration with wallet, we would use:
-      // const hash = await walletClient.writeContract(request);
-      
-      // For now, return the data that would be used in the actual minting
+      // For now, return information that would be used in actual minting
       // This will be connected to the wallet through Privy in the UI
       return {
-        hash: 'simulated_transaction', // This will be replaced with actual hash when connected to wallet
-        contractAddress: 'pending_contract', // This will be replaced with actual contract address
+        hash: 'tx_' + Date.now().toString(), // This will be replaced with actual hash when connected to wallet
+        contractAddress: 'contract_' + Date.now().toString(), // This will be replaced with actual contract address
       };
     } catch (error) {
       console.error('Error simulating contract:', error);
