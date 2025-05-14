@@ -47,13 +47,16 @@ export async function POST(request: NextRequest) {
       chainId: chain.id,
       message: 'Use these parameters with client-side wallet to sign and create the coin'
     });
-  } catch (error: Error) {
+  } catch (error) {
     console.error('Error preparing coin data:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    const errorStack = error instanceof Error ? error.stack : undefined;
+    
     return NextResponse.json(
       { 
-        error: `Failed to prepare coin data: ${error.message || 'Unknown error'}`,
+        error: `Failed to prepare coin data: ${errorMessage}`,
         // Include stack trace in development only
-        details: process.env.NODE_ENV === 'development' ? error.stack : undefined
+        details: process.env.NODE_ENV === 'development' ? errorStack : undefined
       },
       { status: 500 }
     );
