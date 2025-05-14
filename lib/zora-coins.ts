@@ -4,22 +4,8 @@
  */
 import { type Address } from 'viem';
 
-// Define EIP-1193 provider interface
-interface EthereumProvider {
-  isMetaMask?: boolean;
-  request: (args: { method: string; params?: unknown[] }) => Promise<unknown>;
-  on: (event: string, listener: (...args: any[]) => void) => void;
-  removeListener: (event: string, listener: (...args: any[]) => void) => void;
-  selectedAddress?: string;
-  chainId?: string;
-}
-
-// Types for environment
-declare global {
-  interface Window {
-    ethereum?: EthereumProvider;
-  }
-}
+// Remove global interface declaration to avoid conflicts
+// The window.ethereum property is handled directly in the code
 
 export interface BlogPostMetadata {
   title: string;
