@@ -17,48 +17,65 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // First, generate a prompt for the image based on the blog content
-    const promptResponse = await openai.chat.completions.create({
-      model: "gpt-3.5-turbo",
-      messages: [
-        {
-          role: "system",
-          content: "You are a specialized AI that creates descriptive image prompts. Create a detailed prompt for a 512x512 image representing the essence of a cryptocurrency coin for a blog post. The prompt should describe a professional, minimalist design that would work well for a coin logo or icon. Be creative but focused. ONLY return the prompt itself without any explanations or additional text.",
-        },
-        {
-          role: "user",
-          content: `Create an image prompt for a cryptocurrency coin named "${coinName}" based on this blog post content: ${content.slice(0, 1000)}...`,
-        },
-      ],
-      temperature: 0.7,
-      max_tokens: 150
-    });
+    // Create a default coin name if not provided
+    const effectiveCoinName = coinName || `BlogCoin_${Math.floor(Math.random() * 1000)}`;
+    
+    // Use a shorter content excerpt for prompt generation
+    const contentExcerpt = content ? content.slice(0, 500) + '...' : 'A blog post about cryptocurrency';
 
-    const imagePrompt = promptResponse.choices[0].message.content?.trim() || 
-      `A minimalist, professional cryptocurrency coin logo for "${coinName}", with subtle gradient, modern design elements, on a dark background`;
+    try {
+      // First, generate a prompt for the image based on the blog content
+      const promptResponse = await openai.chat.completions.create({
+        model: "gpt-3.5-turbo",
+        messages: [
+          {
+            role: "system",
+            content: "You are a specialized AI that creates descriptive image prompts. Create a detailed prompt for a 512x512 image representing the essence of a cryptocurrency coin for a blog post. The prompt should describe a professional, minimalist design that would work well for a coin logo or icon. Be creative but focused. ONLY return the prompt itself without any explanations or additional text.",
+          },
+          {
+            role: "user",
+            content: `Create an image prompt for a cryptocurrency coin named "${effectiveCoinName}" based on this blog post content: ${contentExcerpt}`,
+          },
+        ],
+        temperature: 0.7,
+        max_tokens: 150
+      });
 
-    // Use the generated prompt to create an image with DALL-E
-    const imageResponse = await openai.images.generate({
-      model: "dall-e-3",
-      prompt: imagePrompt,
-      n: 1,
-      size: "1024x1024",
-      response_format: "url",
-    });
+      const imagePrompt = promptResponse.choices[0].message.content?.trim() || 
+        `A minimalist, professional cryptocurrency coin logo for "${effectiveCoinName}", with subtle gradient, modern design elements, on a dark background`;
 
-    const imageUrl = imageResponse.data[0].url;
+      // Use the generated prompt to create an image with DALL-E
+      const imageResponse = await openai.images.generate({
+        model: "dall-e-3",
+        prompt: imagePrompt,
+        n: 1,
+        size: "1024x1024",
+        response_format: "url",
+      });
 
-    // At this point, you'd typically upload this image to IPFS via Pinata
-    // But for this endpoint, we'll just return the URL from OpenAI
-    // The IPFS upload will happen in the upload-to-ipfs endpoint
+      const imageUrl = imageResponse.data[0].url;
 
-    return NextResponse.json({
-      imageUri: imageUrl
-    });
+      // Return the image URL
+      return NextResponse.json({
+        imageUri: imageUrl,
+        prompt: imagePrompt // Include the prompt for debugging
+      });
+    } catch (openaiError) {
+      console.error('OpenAI API error:', openaiError);
+      
+      // Return a fallback image URL for development purposes
+      return NextResponse.json({
+        imageUri: "https://placehold.co/1024x1024/14b8a6/ffffff?text=BlogCoin",
+        error: `OpenAI error: ${openaiError.message}`
+      });
+    }
   } catch (error) {
     console.error('Error generating image:', error);
     return NextResponse.json(
-      { error: 'Failed to generate image' },
+      { 
+        error: `Failed to generate image: ${error.message}`,
+        imageUri: "https://placehold.co/1024x1024/14b8a6/ffffff?text=Error" // Fallback image
+      },
       { status: 500 }
     );
   }
