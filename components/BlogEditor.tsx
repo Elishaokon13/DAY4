@@ -5,6 +5,7 @@ import dynamic from 'next/dynamic';
 import { usePrivy } from '@privy-io/react-auth';
 import { pinataClient } from '@/lib/pinata';
 import { createBlogCoin, formatBlogPostForIPFS, openZoraCoinCreator } from '@/lib/zora-coins';
+import CoinInfo from './CoinInfo';
 
 // Dynamically import ReactQuill to avoid SSR issues
 const ReactQuill = dynamic(() => import('react-quill'), { ssr: false });
@@ -18,6 +19,7 @@ export function BlogEditor() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [coinAddress, setCoinAddress] = useState<string | null>(null);
+  const [txHash, setTxHash] = useState<string | null>(null);
 
   const { user, authenticated, ready } = usePrivy();
 
@@ -39,6 +41,7 @@ export function BlogEditor() {
       setError(null);
       setSuccess(null);
       setCoinAddress(null);
+      setTxHash(null);
 
       // Basic validation
       if (!title.trim()) {
@@ -98,8 +101,9 @@ export function BlogEditor() {
 
       // Option 1: Use our simplified implementation for testing
       const result = await createBlogCoin(coinParams);
-      setSuccess(`Successfully published! Transaction hash: ${result.hash}`);
+      setSuccess(`Successfully published! Your blog post has been minted as a coin.`);
       setCoinAddress(result.contractAddress);
+      setTxHash(result.hash);
 
       // Option 2: Redirect to Zora's coin creation interface
       const shouldRedirect = window.confirm(
@@ -177,30 +181,12 @@ export function BlogEditor() {
       )}
 
       {coinAddress && (
-        <div className="mb-4 rounded-lg bg-blue-50 p-4 dark:bg-blue-900/20">
-          <h3 className="mb-2 font-bold text-blue-600 dark:text-blue-400">Coin Created</h3>
-          <p className="mb-2 break-all text-blue-800 dark:text-blue-300">
-            Contract: {coinAddress}
-          </p>
-          <div className="mt-3 flex flex-wrap gap-2">
-            <a 
-              href={`https://basescan.org/token/${coinAddress}`}
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="rounded bg-blue-600 px-3 py-1 text-xs text-white hover:bg-blue-700"
-            >
-              View on BaseScan
-            </a>
-            <a 
-              href={`https://dexscreener.com/base/${coinAddress}`}
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="rounded bg-green-600 px-3 py-1 text-xs text-white hover:bg-green-700"
-            >
-              View on DexScreener
-            </a>
-          </div>
-        </div>
+        <CoinInfo 
+          contractAddress={coinAddress} 
+          txHash={txHash || undefined}
+          coinName={title ? `${title} Coin` : undefined}
+          coinSymbol={symbol || undefined}
+        />
       )}
 
       <button
