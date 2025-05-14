@@ -1,103 +1,238 @@
-import Image from "next/image";
+'use client';
+
+import { useState } from 'react';
+import { motion } from 'framer-motion';
+import toast from 'react-hot-toast';
+import Navbar from '@/components/ui/navbar';
+import BlogEditor from '@/components/ui/blog-editor';
+import GradientButton from '@/components/ui/gradient-button';
+import CoinDisplay from '@/components/ui/coin-display';
+import useAuth from '@/hooks/use-auth';
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  // Auth state
+  const { isAuthenticated, address } = useAuth();
+  
+  // Blog content state
+  const [blogContent, setBlogContent] = useState('');
+  
+  // Minting state
+  const [isMinting, setIsMinting] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [generatedData, setGeneratedData] = useState<{
+    coinName: string;
+    coinDescription: string;
+    imageUri: string;
+  } | null>(null);
+  
+  // Minted coin state
+  const [mintedCoin, setMintedCoin] = useState<{
+    address: string;
+    name: string;
+    description: string;
+    imageUri: string;
+  } | null>(null);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
-        </div>
+  // Handle blog content change
+  const handleContentChange = (content: string) => {
+    setBlogContent(content);
+  };
+
+  // Generate coin metadata with AI
+  const generateMetadata = async () => {
+    if (!blogContent || blogContent === '<p><br></p>') {
+      toast.error('Please write something in your blog post first!');
+      return;
+    }
+
+    try {
+      setIsGenerating(true);
+      // This would be a call to your OpenAI API route
+      const response = await fetch('/api/generate-coin', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ content: blogContent }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to generate metadata');
+      }
+
+      const data = await response.json();
+      setGeneratedData({
+        coinName: data.name,
+        coinDescription: data.description,
+        imageUri: data.imageUri, 
+      });
+
+      toast.success('Metadata generated! Ready to mint!');
+    } catch (error) {
+      console.error('Error generating metadata:', error);
+      toast.error('Failed to generate metadata. Please try again.');
+    } finally {
+      setIsGenerating(false);
+    }
+  };
+
+  // Upload content to IPFS
+  const uploadToIPFS = async () => {
+    try {
+      // This would be a call to your Pinata API route
+      const response = await fetch('/api/upload-to-ipfs', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          content: blogContent,
+          imageUri: generatedData?.imageUri || ''
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to upload to IPFS');
+      }
+
+      const { contentUri, imageUri } = await response.json();
+      return { contentUri, imageUri };
+    } catch (error) {
+      console.error('Error uploading to IPFS:', error);
+      throw error;
+    }
+  };
+
+  // Mint coin using Zora Coins SDK
+  const mintCoin = async () => {
+    if (!generatedData) {
+      await generateMetadata();
+      return;
+    }
+
+    if (!isAuthenticated) {
+      toast.error('Please connect your wallet first!');
+      return;
+    }
+
+    try {
+      setIsMinting(true);
+      toast.loading('Uploading to IPFS...', { id: 'minting' });
+      
+      // Upload to IPFS first
+      const { contentUri, imageUri } = await uploadToIPFS();
+      
+      toast.loading('Minting your coin...', { id: 'minting' });
+      
+      // Call minting API
+      const response = await fetch('/api/mint-coin', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: generatedData.coinName,
+          description: generatedData.coinDescription,
+          contentUri,
+          imageUri,
+          recipientAddress: address
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to mint coin');
+      }
+
+      const { coinAddress } = await response.json();
+      
+      setMintedCoin({
+        address: coinAddress,
+        name: generatedData.coinName,
+        description: generatedData.coinDescription,
+        imageUri: imageUri
+      });
+      
+      toast.success('Your blog post has been minted as a coin!', { id: 'minting' });
+    } catch (error) {
+      console.error('Error minting coin:', error);
+      toast.error('Failed to mint coin. Please try again.', { id: 'minting' });
+    } finally {
+      setIsMinting(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-50">
+      <Navbar />
+      
+      <main className="container mx-auto px-4 pt-24 pb-12">
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5 }}
+          className="max-w-3xl mx-auto"
+        >
+          <h1 className="text-3xl font-bold text-center mb-2">
+            Mint Your Blog Post as an ERC-20 Coin
+          </h1>
+          <p className="text-center text-gray-600 dark:text-gray-400 mb-8">
+            Write your blog post, generate metadata with AI, and mint it as an ERC-20 coin on Base
+          </p>
+          
+          <div className="space-y-8">
+            {/* Blog Editor */}
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+              <h2 className="text-xl font-semibold mb-4">Write Your Blog Post</h2>
+              <BlogEditor 
+                value={blogContent} 
+                onChange={handleContentChange} 
+              />
+              
+              <div className="mt-6 flex justify-end">
+                <GradientButton
+                  onClick={mintCoin}
+                  isLoading={isMinting || isGenerating}
+                  disabled={!blogContent || blogContent === '<p><br></p>'}
+                >
+                  {generatedData ? 'Mint as ERC-20' : 'Generate & Mint'}
+                </GradientButton>
+              </div>
+            </div>
+            
+            {/* Generated Metadata Preview (conditional) */}
+            {generatedData && !mintedCoin && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6"
+              >
+                <h2 className="text-xl font-semibold mb-4">Generated Metadata</h2>
+                <div className="space-y-2">
+                  <div>
+                    <span className="font-medium">Coin Name:</span> {generatedData.coinName}
+                  </div>
+                  <div>
+                    <span className="font-medium">Description:</span> {generatedData.coinDescription}
+                  </div>
+                </div>
+              </motion.div>
+            )}
+            
+            {/* Minted Coin Display (conditional) */}
+            {mintedCoin && (
+              <div>
+                <h2 className="text-xl font-semibold mb-4">Your Minted Coin</h2>
+                <CoinDisplay
+                  coinName={mintedCoin.name}
+                  coinDescription={mintedCoin.description}
+                  coinAddress={mintedCoin.address}
+                  imageUri={mintedCoin.imageUri}
+                />
+              </div>
+            )}
+          </div>
+        </motion.div>
       </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
     </div>
   );
 }
