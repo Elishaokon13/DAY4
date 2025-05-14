@@ -110,6 +110,8 @@ We have completed the implementation of almost all major components of the BlogC
 **Updates**:
 - Fixed the Zora Coins SDK implementation to use the latest API. The previous implementation was using a non-existent `ZoraCoinsClient` class. We've updated it to use the proper `createCoin` function from the SDK along with Viem's public and wallet clients.
 - Fixed TypeScript errors in the Privy provider configuration in app/providers.tsx. Removed unsupported properties (desktopLayout, modalBackdrop, modalBorderRadius, defaultButtonStyle, preferencesInStorage, requireUserPasswordOnCreate, noPromptOnSignature) and updated the embeddedWallets configuration to use the current Privy API format.
+- Fixed the network switching functionality in the useAuth hook. The previous implementation was using `user.wallet.switchChain()` which is not available in the current Privy SDK. Updated to use the standard Ethereum provider methods (`wallet_switchEthereumChain` and `wallet_addEthereumChain`) through the Ethereum provider obtained from `user.wallet.getEthereumProvider()`.
+- Fixed linting errors across several files to improve code quality and avoid TypeScript errors.
 
 What remains to be done:
 1. The .env.local file creation was blocked, but placeholders have been documented in the README
@@ -124,6 +126,10 @@ What remains to be done:
 5. Fixed TypeScript errors in the Privy provider configuration. The previous configuration was using outdated or unsupported properties in the Privy SDK. We've updated it to match the current Privy documentation. The main changes were:
    - Removed unsupported UI customization properties like `desktopLayout`, `modalBackdrop`, `modalBorderRadius`, etc.
    - Updated the `embeddedWallets` configuration to the proper format with nested `ethereum` object and removed unsupported properties like `preferencesInStorage`, `requireUserPasswordOnCreate`, and `noPromptOnSignature`
+6. Fixed the network switching functionality in the Privy wallet integration. The error "user.wallet.switchChain is not a function" occurred because the current Privy SDK doesn't expose this method directly. Instead, we now:
+   - Get the Ethereum provider from the wallet using `user.wallet.getEthereumProvider()`
+   - Use the standard Ethereum provider methods `wallet_switchEthereumChain` and `wallet_addEthereumChain` to handle network switching
+   - Properly handle errors and chain addition when the Base network is not already configured in the wallet
 
 ## Lessons
 - Include info useful for debugging in the program output.
@@ -135,4 +141,5 @@ What remains to be done:
 - When handling multiple asynchronous operations (AI generation, IPFS uploads, blockchain transactions), use proper error handling and loading states to provide a good user experience.
 - When implementing third-party SDKs, check for recent updates to their API. The Zora Coins SDK changed its API from a client-based approach to a function-based approach.
 - For ES2020+ features like BigInt literals, use constructor functions (e.g., `BigInt(0)` instead of `0n`) if targeting older JavaScript versions. 
-- When using third-party libraries like Privy, always refer to the latest documentation as configuration options might change between versions. Check for TypeScript errors that indicate incompatible property names. 
+- When using third-party libraries like Privy, always refer to the latest documentation as configuration options might change between versions. Check for TypeScript errors that indicate incompatible property names.
+- For blockchain operations like network switching, use the standard Ethereum provider methods (`wallet_switchEthereumChain` and `wallet_addEthereumChain`) which are more widely supported across different wallet implementations. 
