@@ -99,26 +99,57 @@ export function BlogEditor() {
         metadataUri
       };
 
-      // Option 1: Use our simplified implementation (demo only)
-      const result = await createBlogCoin(coinParams);
-      setSuccess(`Successfully uploaded to IPFS! Your content is now ready to be minted as a coin.`);
-      setCoinAddress(result.contractAddress);
-      setTxHash(result.hash);
+      setSuccess(`Successfully uploaded to IPFS! Now attempting to mint your blog post as a coin...`);
 
-      // Option 2: Redirect to Zora's coin creation interface
-      const shouldRedirect = window.confirm(
-        'To mint a real coin on Base Sepolia testnet, you need to be redirected to Zora. ' +
-        'Would you like to open Zora\'s coin creation interface with your blog details pre-filled?'
-      );
+      try {
+        // Try to create coin using Zora SDK
+        const result = await createBlogCoin(coinParams);
+        
+        // If we reached here, either the coin creation was successful or we got a demo result
+        if (result.contractAddress === 'pending') {
+          setSuccess(`Transaction submitted! Your blog post is being minted as a coin. Transaction details will be available shortly.`);
+        } else if (result.hash.startsWith('tx_')) {
+          // This is a demo transaction
+          setSuccess(`Your content is ready to be minted as a coin. Use the redirect to Zora option to create it on the testnet.`);
+        } else {
+          // This is a real transaction
+          setSuccess(`Successfully minted your blog post as a coin! The transaction is being processed.`);
+        }
+        
+        setCoinAddress(result.contractAddress);
+        setTxHash(result.hash);
+        
+        // Ask if user wants to be redirected to Zora
+        const shouldRedirect = window.confirm(
+          'Would you like to open Zora\'s coin creation interface with your blog details pre-filled? ' +
+          'This allows you to see your coin on the Zora testnet interface.'
+        );
 
-      if (shouldRedirect) {
-        openZoraCoinCreator(coinParams);
+        if (shouldRedirect) {
+          openZoraCoinCreator(coinParams);
+        }
+      } catch (mintError: any) {
+        console.error('Error minting coin:', mintError);
+        
+        // If minting fails, we still want to show the metadata and offer redirect option
+        setError(`Error minting coin: ${mintError.message}. You can still create your coin using the Zora interface.`);
+        
+        // Still offer the redirect option
+        const shouldRedirect = window.confirm(
+          'There was an error creating your coin using the SDK. Would you like to be redirected to ' +
+          'Zora\'s coin creation interface to complete the process?'
+        );
+
+        if (shouldRedirect) {
+          openZoraCoinCreator(coinParams);
+        }
       }
 
-      // Reset form
+      // Reset form after successful upload, regardless of minting result
       setTitle('');
       setContent('');
       setSymbol('');
+      
     } catch (err: any) {
       console.error('Error publishing blog post:', err);
       setError(err.message || 'Failed to publish blog post');
