@@ -1,22 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import dynamic from 'next/dynamic';
 import { motion } from 'framer-motion';
-
-// Create a wrapper component for React-Quill to handle the compatibility issues
-const QuillWrapper = dynamic(
-  async () => {
-    const { default: RQ } = await import('react-quill');
-    // Return a wrapper function that doesn't use findDOMNode
-    return function QuillWrapper({ forwardedRef, ...props }: any) {
-      return <RQ ref={forwardedRef} {...props} />;
-    };
-  },
-  { ssr: false }
-);
-
-import 'react-quill/dist/quill.snow.css';
+import { useEditor, EditorContent } from '@tiptap/react';
+import StarterKit from '@tiptap/starter-kit';
 
 interface BlogEditorProps {
   onChange: (content: string) => void;
@@ -27,27 +14,24 @@ interface BlogEditorProps {
 export default function BlogEditor({ onChange, value, isReadOnly = false }: BlogEditorProps) {
   const [mounted, setMounted] = useState(false);
 
+  const editor = useEditor({
+    extensions: [StarterKit],
+    content: value,
+    editable: !isReadOnly,
+    onUpdate: ({ editor }) => {
+      onChange(editor.getHTML());
+    },
+  });
+
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  // Minimal toolbar configuration for a cleaner UI
-  const modules = {
-    toolbar: [
-      [{ 'header': [1, 2, 3, false] }],
-      ['bold', 'italic', 'underline', 'strike'],
-      [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-      ['link', 'blockquote'],
-      ['clean']
-    ],
-  };
-
-  const formats = [
-    'header',
-    'bold', 'italic', 'underline', 'strike',
-    'list', 'bullet',
-    'link', 'blockquote'
-  ];
+  useEffect(() => {
+    if (editor && value !== editor.getHTML()) {
+      editor.commands.setContent(value);
+    }
+  }, [value, editor]);
 
   if (!mounted) {
     return (
@@ -62,54 +46,77 @@ export default function BlogEditor({ onChange, value, isReadOnly = false }: Blog
       transition={{ duration: 0.5 }}
       className="w-full"
     >
-      <div className="min-h-[350px] bg-white dark:bg-gray-800 rounded-lg overflow-hidden shadow-md">
-        <QuillWrapper
-          value={value}
-          onChange={onChange}
-          modules={modules}
-          formats={formats}
-          placeholder="Write your blog post here..."
-          className="h-full blog-editor"
-          readOnly={isReadOnly}
-          theme="snow"
-        />
+      <div className="min-h-[350px] bg-white dark:bg-gray-800 rounded-lg overflow-hidden shadow-md p-4 blog-editor">
+        <div className="toolbar mb-4 p-2 bg-gray-100 dark:bg-gray-700 rounded flex flex-wrap gap-2">
+          <button
+            onClick={() => editor?.chain().focus().toggleBold().run()}
+            className={`px-2 py-1 rounded ${editor?.isActive('bold') ? 'bg-blue-500 text-white' : 'bg-gray-200 dark:bg-gray-600'}`}
+            type="button"
+          >
+            Bold
+          </button>
+          <button
+            onClick={() => editor?.chain().focus().toggleItalic().run()}
+            className={`px-2 py-1 rounded ${editor?.isActive('italic') ? 'bg-blue-500 text-white' : 'bg-gray-200 dark:bg-gray-600'}`}
+            type="button"
+          >
+            Italic
+          </button>
+          <button
+            onClick={() => editor?.chain().focus().toggleHeading({ level: 1 }).run()}
+            className={`px-2 py-1 rounded ${editor?.isActive('heading', { level: 1 }) ? 'bg-blue-500 text-white' : 'bg-gray-200 dark:bg-gray-600'}`}
+            type="button"
+          >
+            H1
+          </button>
+          <button
+            onClick={() => editor?.chain().focus().toggleHeading({ level: 2 }).run()}
+            className={`px-2 py-1 rounded ${editor?.isActive('heading', { level: 2 }) ? 'bg-blue-500 text-white' : 'bg-gray-200 dark:bg-gray-600'}`}
+            type="button"
+          >
+            H2
+          </button>
+          <button
+            onClick={() => editor?.chain().focus().toggleBulletList().run()}
+            className={`px-2 py-1 rounded ${editor?.isActive('bulletList') ? 'bg-blue-500 text-white' : 'bg-gray-200 dark:bg-gray-600'}`}
+            type="button"
+          >
+            Bullet List
+          </button>
+          <button
+            onClick={() => editor?.chain().focus().toggleOrderedList().run()}
+            className={`px-2 py-1 rounded ${editor?.isActive('orderedList') ? 'bg-blue-500 text-white' : 'bg-gray-200 dark:bg-gray-600'}`}
+            type="button"
+          >
+            Ordered List
+          </button>
+          <button
+            onClick={() => editor?.chain().focus().toggleBlockquote().run()}
+            className={`px-2 py-1 rounded ${editor?.isActive('blockquote') ? 'bg-blue-500 text-white' : 'bg-gray-200 dark:bg-gray-600'}`}
+            type="button"
+          >
+            Quote
+          </button>
+        </div>
+        <EditorContent editor={editor} className="prose dark:prose-invert max-w-none min-h-[250px] focus:outline-none" />
       </div>
       <style jsx global>{`
-        .blog-editor .ql-container {
+        .blog-editor {
           font-family: var(--font-inter);
           font-size: 16px;
-          min-height: 250px;
         }
-        .blog-editor .ql-editor {
+        .blog-editor .ProseMirror {
           min-height: 250px;
           max-height: 500px;
           overflow-y: auto;
+          padding: 1rem;
+          outline: none;
         }
-        .blog-editor .ql-toolbar {
-          border-top-left-radius: 0.5rem;
-          border-top-right-radius: 0.5rem;
-          background-color: #f9fafb;
-        }
-        .dark .blog-editor .ql-toolbar {
-          background-color: #374151;
-          color: white;
-          border-color: #4b5563;
-        }
-        .dark .blog-editor .ql-container {
-          border-color: #4b5563;
+        .dark .blog-editor {
           color: white;
         }
-        .dark .blog-editor .ql-editor {
+        .dark .blog-editor .ProseMirror {
           background-color: #1f2937;
-        }
-        .dark .blog-editor .ql-stroke {
-          stroke: #d1d5db;
-        }
-        .dark .blog-editor .ql-fill {
-          fill: #d1d5db;
-        }
-        .dark .blog-editor .ql-picker {
-          color: #d1d5db;
         }
       `}</style>
     </motion.div>
