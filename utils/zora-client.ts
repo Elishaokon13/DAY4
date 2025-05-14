@@ -2,16 +2,20 @@ import { createCoin } from '@zoralabs/coins-sdk';
 import { type Address, createPublicClient, http } from 'viem';
 import { base, baseSepolia } from 'viem/chains';
 
+// Base configuration constants
+const BASE_MAINNET_CHAIN_ID = 8453;
+const BASE_SEPOLIA_CHAIN_ID = 84532;
+
 // Base Sepolia configuration
 const baseSepoliaConfig = {
   rpcUrl: process.env.NEXT_PUBLIC_BASE_SEPOLIA_RPC_URL || 'https://sepolia.base.org',
-  chainId: 84532,
+  chainId: BASE_SEPOLIA_CHAIN_ID,
 };
 
 // Base Mainnet configuration
 const baseMainnetConfig = {
   rpcUrl: process.env.NEXT_PUBLIC_BASE_MAINNET_RPC_URL || 'https://mainnet.base.org',
-  chainId: 8453,
+  chainId: BASE_MAINNET_CHAIN_ID,
 };
 
 /**
@@ -19,11 +23,12 @@ const baseMainnetConfig = {
  * This function can be used on both client and server
  */
 export function getNetworkInfo() {
-  const network = process.env.NEXT_PUBLIC_ZORA_NETWORK || 'base-sepolia';
-  const chain = network === 'base' ? base : baseSepolia;
-  const rpcUrl = network === 'base' 
-    ? process.env.NEXT_PUBLIC_BASE_MAINNET_RPC_URL || 'https://mainnet.base.org'
-    : process.env.NEXT_PUBLIC_BASE_SEPOLIA_RPC_URL || 'https://sepolia.base.org';
+  // Default to Base mainnet (instead of Sepolia)
+  const network = process.env.NEXT_PUBLIC_ZORA_NETWORK || 'base';
+  const chain = network === 'base-sepolia' ? baseSepolia : base;
+  const rpcUrl = network === 'base-sepolia' 
+    ? process.env.NEXT_PUBLIC_BASE_SEPOLIA_RPC_URL || 'https://sepolia.base.org'
+    : process.env.NEXT_PUBLIC_BASE_MAINNET_RPC_URL || 'https://mainnet.base.org';
   
   return { network, chain, rpcUrl };
 }
