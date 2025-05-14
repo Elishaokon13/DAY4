@@ -1,10 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { PinataPinResponse, PinataSDK } from '@pinata/sdk';
+import pinataSDK from 'pinata-sdk';
 import { v4 as uuidv4 } from 'uuid';
 import fetch from 'node-fetch';
 
 // Initialize Pinata client
-const pinata = new PinataSDK(
+const pinata = pinataSDK(
   process.env.PINATA_API_KEY || '',
   process.env.PINATA_API_SECRET || ''
 );
