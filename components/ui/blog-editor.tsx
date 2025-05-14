@@ -21,6 +21,12 @@ export default function BlogEditor({ onChange, value, isReadOnly = false }: Blog
     onUpdate: ({ editor }) => {
       onChange(editor.getHTML());
     },
+    editorProps: {
+      attributes: {
+        class: 'prose dark:prose-invert focus:outline-none max-w-none min-h-[250px]',
+      },
+    },
+    immediatelyRender: false
   });
 
   useEffect(() => {
@@ -98,7 +104,7 @@ export default function BlogEditor({ onChange, value, isReadOnly = false }: Blog
             Quote
           </button>
         </div>
-        <EditorContent editor={editor} className="prose dark:prose-invert max-w-none min-h-[250px] focus:outline-none" />
+        <EditorContent editor={editor} />
       </div>
       <style jsx global>{`
         .blog-editor {
