@@ -42,10 +42,7 @@ export interface BlogPostIPFSMetadata {
  */
 export async function createBlogCoin(params: CreateCoinParams): Promise<string> {
   try {
-    const { name, symbol, description, ownerAddress, imageUrl, metadataUri } = params;
-    
-    // The creator gets 100% of earnings (1,000,000 = 100%)
-    const creatorFeeBps = 1000000;
+    const { name, symbol, metadataUri, ownerAddress } = params;
     
     // Mock implementation since we can't determine exact SDK requirements
     // In a real implementation, you would import and use the createCoin function
