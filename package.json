@@ -9,7 +9,6 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@pinata/sdk": "^2.1.0",
     "@privy-io/react-auth": "^2.13.1",
     "@tailwindcss/typography": "^0.5.16",
     "@tiptap/pm": "^2.12.0",
