@@ -1,7 +1,8 @@
 'use client';
 
-import { ZoraCoinsClient } from '@zoralabs/coins-sdk';
-import type { Address } from 'viem';
+import { createCoin } from '@zoralabs/coins-sdk';
+import { type Address, createPublicClient, http } from 'viem';
+import { base, baseSepolia } from 'viem/chains';
 
 // Base Sepolia configuration
 const baseSepoliaConfig = {
@@ -16,20 +17,18 @@ const baseMainnetConfig = {
 };
 
 /**
- * Create a Zora Coins client based on the current environment
- * @param provider The ethereum provider from the wallet
- * @returns ZoraCoinsClient instance
+ * Create a public client for the given network
  */
-export function createZoraClient(provider: any) {
+export function createBasePublicClient() {
   const network = process.env.NEXT_PUBLIC_ZORA_NETWORK || 'base-sepolia';
-  const config = network === 'base' ? baseMainnetConfig : baseSepoliaConfig;
+  const chain = network === 'base' ? base : baseSepolia;
+  const rpcUrl = network === 'base' 
+    ? process.env.NEXT_PUBLIC_BASE_MAINNET_RPC_URL || 'https://mainnet.base.org'
+    : process.env.NEXT_PUBLIC_BASE_SEPOLIA_RPC_URL || 'https://sepolia.base.org';
   
-  return new ZoraCoinsClient({
-    chain: {
-      id: config.chainId,
-      rpcUrl: config.rpcUrl,
-    },
-    provider,
+  return createPublicClient({
+    chain,
+    transport: http(rpcUrl),
   });
 }
 
@@ -42,42 +41,41 @@ export async function mintBlogCoin({
   contentUri,
   imageUri,
   recipient,
-  provider
+  walletClient
 }: {
   name: string;
   description: string;
   contentUri: string;
   imageUri: string;
   recipient: Address;
-  provider: any;
+  walletClient: any;
 }) {
   try {
-    const zoraClient = createZoraClient(provider);
+    const publicClient = createBasePublicClient();
     
-    // Craft metadata for the coin
-    const metadata = {
+    // Generate a 3-5 character symbol from the name
+    const symbol = name
+      .replace(/[^A-Z0-9]/gi, '') // Remove non-alphanumeric
+      .toUpperCase()
+      .slice(0, 5) || 'BLOG';
+    
+    // Define coin parameters
+    const coinParams = {
       name,
+      symbol,
       description,
-      symbol: name.replace(/\s+/g, '').slice(0, 5).toUpperCase(),
+      uri: imageUri, // Use generated image as the coin's metadata URI
       animationUri: contentUri, // Use blog content as animation URI
-      imageUri,  // Generated image as the coin's image
+      payoutRecipient: recipient,
+      initialPurchaseWei: 0n // No initial purchase required
     };
     
-    // Deploy the coin contract
-    const deployCoinResponse = await zoraClient.createCoin({
-      name: metadata.name,
-      description: metadata.description,
-      symbol: metadata.symbol,
-      initialmintTo: recipient,
-      initialSupply: 1000000000000000000n, // 1 token with 18 decimals
-      metadataUri: metadata.imageUri,
-      animationUri: metadata.animationUri,
-      payoutRecipient: recipient
-    });
+    // Create and deploy the coin
+    const result = await createCoin(coinParams, walletClient, publicClient);
     
     return {
-      transactionHash: deployCoinResponse.transactionHash,
-      coinAddress: deployCoinResponse.coinContract
+      transactionHash: result.hash,
+      coinAddress: result.address
     };
   } catch (error) {
     console.error('Error minting coin:', error);
