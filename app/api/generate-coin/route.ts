@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
       messages: [
         {
           role: "system",
-          content: "You are a specialized AI that analyzes blog posts and generates creative cryptocurrency names and descriptions. Make the name unique and related to the content. The description should be concise (50-100 words) and summarize the blog post. Return ONLY a JSON object with 'name' and 'description' fields, nothing else.",
+          content: "You are a specialized AI that analyzes blog posts and generates creative cryptocurrency names and descriptions. Make the name unique and related to the content. The description should be concise (50-100 words) and summarize the blog post. Return ONLY valid JSON with 'name' and 'description' fields in this format: {\"name\": \"CoinName\", \"description\": \"Description here\"}",
         },
         {
           role: "user",
@@ -38,7 +38,13 @@ export async function POST(request: NextRequest) {
     let nameAndDescription = { name: '', description: '' };
     try {
       const responseText = textCompletion.choices[0].message.content?.trim() || '';
-      nameAndDescription = JSON.parse(responseText);
+      // Extract valid JSON from the response by finding content between curly braces
+      const jsonMatch = responseText.match(/\{.*\}/s);
+      if (jsonMatch) {
+        nameAndDescription = JSON.parse(jsonMatch[0]);
+      } else {
+        throw new Error('No valid JSON found in response');
+      }
     } catch (error) {
       console.error('Error parsing OpenAI response:', error);
       // Fallback values if parsing fails
@@ -48,8 +54,13 @@ export async function POST(request: NextRequest) {
       };
     }
 
-    // Now generate an image based on the content
-    const imageResponse = await fetch('/api/generate-image', {
+    // Get the base URL from the request for absolute URL construction
+    const protocol = process.env.NODE_ENV === 'production' ? 'https' : 'http';
+    const host = request.headers.get('host') || 'localhost:3000';
+    const baseUrl = `${protocol}://${host}`;
+
+    // Now generate an image based on the content using absolute URL
+    const imageResponse = await fetch(`${baseUrl}/api/generate-image`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -61,7 +72,7 @@ export async function POST(request: NextRequest) {
     });
 
     if (!imageResponse.ok) {
-      throw new Error('Failed to generate image');
+      throw new Error(`Failed to generate image: ${await imageResponse.text()}`);
     }
 
     const { imageUri } = await imageResponse.json();
@@ -74,7 +85,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Error generating coin data:', error);
     return NextResponse.json(
-      { error: 'Failed to generate coin data' },
+      { error: `Failed to generate coin data: ${error.message}` },
       { status: 500 }
     );
   }
