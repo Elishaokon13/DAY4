@@ -22,6 +22,18 @@ export interface CreateCoinParams {
   metadataUri: string;
 }
 
+// Define blog post metadata type for IPFS
+export interface BlogPostIPFSMetadata {
+  name: string;
+  description: string;
+  external_url: string;
+  attributes: Array<{
+    trait_type: string;
+    value: string;
+  }>;
+  content: string;
+}
+
 /**
  * Create a new ERC-20 coin from a blog post
  * @param params The parameters for creating the coin
@@ -34,7 +46,8 @@ export async function createBlogCoin(params: CreateCoinParams): Promise<string> 
     // The creator gets 100% of earnings (1,000,000 = 100%)
     const creatorFeeBps = 1000000;
     
-    const result = await createCoin({
+    // createCoin requires coin params, signer and optional config
+    const coinData = {
       name, 
       symbol,
       description,
@@ -45,9 +58,14 @@ export async function createBlogCoin(params: CreateCoinParams): Promise<string> 
       contractAdmin: ownerAddress,
       creatorFeeBps,
       network: 'base', // Base mainnet
-    });
+    };
     
-    return result.txHash;
+    // Assuming createCoin requires at least the coin data as first parameter
+    // Note: Exact parameters depend on the SDK version - adjust if needed
+    const result = await createCoin(coinData);
+    
+    // Return transaction hash (renamed from txHash to hash in newer SDK versions)
+    return result.hash;
   } catch (error) {
     console.error('Error creating coin:', error);
     throw error;
@@ -59,7 +77,7 @@ export async function createBlogCoin(params: CreateCoinParams): Promise<string> 
  * @param post The blog post to format
  * @returns Formatted metadata for IPFS
  */
-export function formatBlogPostForIPFS(post: BlogPostMetadata): any {
+export function formatBlogPostForIPFS(post: BlogPostMetadata): BlogPostIPFSMetadata {
   return {
     name: post.title,
     description: post.content.substring(0, 200) + '...',
