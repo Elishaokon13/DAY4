@@ -456,16 +456,6 @@
   resolved "https://registry.npmjs.org/@floating-ui/utils/-/utils-0.2.9.tgz"
   integrity sha512-MDWhGtE+eHw5JW7lq4qhc5yRLS11ERl1c7Z6Xd0a58DozHES6EnNNwUWbMiG4J9Cgj053Bhk8zvlhFYKVhULwg==
 
-"@glennsl/bs-json@^3.0.0":
-  version "3.0.0"
-  resolved "https://registry.npmjs.org/@glennsl/bs-json/-/bs-json-3.0.0.tgz"
-  integrity sha512-slqtGLd/c3yQK9Qfd1gfMB9JCzNU4wzCpVPfO9pXlG64M+te5r30FK++tb3uQEVlVLYtpgZ4wCHtkI8xoshgxQ==
-
-"@glennsl/bs-json@^5.0.4":
-  version "5.0.4"
-  resolved "https://registry.npmjs.org/@glennsl/bs-json/-/bs-json-5.0.4.tgz"
-  integrity sha512-Th9DetZjRlMZrb74kgGJ44oWcoFyOTE884WlSuXft0Cd+J09vHRxiB7eVyK7Gthb4cSevsBBJDHYAbGGL25wPw==
-
 "@headlessui/react@^2.2.0":
   version "2.2.3"
   resolved "https://registry.npmjs.org/@headlessui/react/-/react-2.2.3.tgz"
@@ -2362,21 +2352,6 @@ brorand@^1.1.0:
   version "1.1.0"
   resolved "https://registry.npmjs.org/brorand/-/brorand-1.1.0.tgz"
   integrity sha512-cKV8tMCEpQs4hK/ik71d6LrPOnpkpGBR0wzxqr68g2m/LB2GxVYQroAjMJZRVM1Y4BCjCKc3vAamxSzOY2RP+w==
-
-bs-fetch@^0.3.1:
-  version "0.3.1"
-  resolved "https://registry.npmjs.org/bs-fetch/-/bs-fetch-0.3.1.tgz"
-  integrity sha512-MxwnuuXPldXnoCtlpeN5JNbbmb1tVgsqpLfVunvuMLAIQNyP0TqoImHiQRTz38PBSN8/iX+2yVlm+PFJfnHHiA==
-
-bs-fetch@^0.6.2:
-  version "0.6.2"
-  resolved "https://registry.npmjs.org/bs-fetch/-/bs-fetch-0.6.2.tgz"
-  integrity sha512-VXEjp8kY3vHPckaoy3d96Bx0KYjJAPLNISBwfpwMN26K6DtuZYwI2HKhx7zeHBajz1bRArfx7O8OOLcdtujMvg==
-
-bs-platform@^9.0.2:
-  version "9.0.2"
-  resolved "https://registry.npmjs.org/bs-platform/-/bs-platform-9.0.2.tgz"
-  integrity sha512-Ye9JqJ4Oa7mcjjoOVRYI8Uc2Cf8N7jQLWDcdUplY7996d/YErSR7WitmV7XnSwr4EvdrbwjEsg1NxNjUQv3ChA==
 
 bs58@^5.0.0:
   version "5.0.0"
@@ -4502,7 +4477,7 @@ node-fetch-native@^1.6.4, node-fetch-native@^1.6.6:
   resolved "https://registry.npmjs.org/node-fetch-native/-/node-fetch-native-1.6.6.tgz"
   integrity sha512-8Mc2HhqPdlIfedsuZoc3yioPuzp6b+L5jRCRY1QzuWZh2EGJVQrGppC6V6cF0bLdbW0+O2YpqCA25aF/1lvipQ==
 
-node-fetch@^2.3.0, node-fetch@^2.6.7, node-fetch@^2.7.0:
+node-fetch@^2.6.7, node-fetch@^2.7.0:
   version "2.7.0"
   resolved "https://registry.npmjs.org/node-fetch/-/node-fetch-2.7.0.tgz"
   integrity sha512-c4FRfUm/dbcWZ7U+1Wq0AwCyFL+3nt2bEw05wfxSz+DWpWsitgmSgYmy2dQdWyKC1694ELPqMs/YzUSNozLt8A==
@@ -4762,15 +4737,6 @@ picomatch@^4.0.2:
   version "4.0.2"
   resolved "https://registry.npmjs.org/picomatch/-/picomatch-4.0.2.tgz"
   integrity sha512-M7BAV6Rlcy5u+m6oPhAPFgJTzAioX/6B0DxyvDlo9l8+T3nLKbrczg2WLUyzd45L8RqfUMyGPzekbMvX2Ldkwg==
-
-pinata-sdk@^0.1.7:
-  version "0.1.7"
-  resolved "https://registry.npmjs.org/pinata-sdk/-/pinata-sdk-0.1.7.tgz"
-  integrity sha512-hjNRUp2M0SySwfDx0kLtNKVIDCvmxGpWo1cVipGlEotMjKWsgzbPdFHBDNGly8ZRv0/6puIvGMm5QkQLiIf3bg==
-  dependencies:
-    "@glennsl/bs-json" "^3.0.0"
-    bs-fetch "^0.3.1"
-    node-fetch "^2.3.0"
 
 pino-abstract-transport@^1.0.0:
   version "1.2.0"
