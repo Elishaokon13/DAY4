@@ -9,8 +9,19 @@ async function fetchImageToBuffer(imageUrl: string): Promise<Buffer> {
   return Buffer.from(response.data);
 }
 
+// Define interfaces for IPFS metadata and content
+interface PinataMetadata {
+  name: string;
+  keyvalues: Record<string, string>;
+}
+
+interface BlogPostContent {
+  content: string;
+  timestamp: string;
+}
+
 // Direct Pinata API functions
-async function pinJSONToIPFS(jsonBody: any, metadata: any) {
+async function pinJSONToIPFS(jsonBody: BlogPostContent, metadata: PinataMetadata) {
   const pinataApiKey = process.env.PINATA_API_KEY || '';
   const pinataApiSecret = process.env.PINATA_API_SECRET || '';
   
@@ -32,7 +43,7 @@ async function pinJSONToIPFS(jsonBody: any, metadata: any) {
   return response.data;
 }
 
-async function pinFileToIPFS(fileBuffer: Buffer, metadata: any) {
+async function pinFileToIPFS(fileBuffer: Buffer, metadata: PinataMetadata) {
   const pinataApiKey = process.env.PINATA_API_KEY || '';
   const pinataApiSecret = process.env.PINATA_API_SECRET || '';
   
@@ -78,7 +89,7 @@ export async function POST(request: NextRequest) {
     const uniqueId = uuidv4();
     
     // Upload blog post content to IPFS
-    const contentMetadata = {
+    const contentMetadata: PinataMetadata = {
       name: `BlogPost_${uniqueId}`,
       keyvalues: {
         type: 'blog-post',
@@ -102,7 +113,7 @@ export async function POST(request: NextRequest) {
         const imageBuffer = await fetchImageToBuffer(imageUri);
         
         // Upload image to IPFS
-        const imageMetadata = {
+        const imageMetadata: PinataMetadata = {
           name: `BlogCoinImage_${uniqueId}`,
           keyvalues: {
             type: 'blog-coin-image',
@@ -115,10 +126,11 @@ export async function POST(request: NextRequest) {
       } catch (error) {
         console.error('Error uploading image to IPFS:', error);
         // Continue without image if there's an error
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
         return NextResponse.json({
           contentUri,
           imageUri: imageUri, // Return original image URI if IPFS upload fails
-          error: `Image upload to IPFS failed: ${error.message}`
+          error: `Image upload to IPFS failed: ${errorMessage}`
         });
       }
     }
@@ -130,8 +142,9 @@ export async function POST(request: NextRequest) {
     
   } catch (error) {
     console.error('Error uploading to IPFS:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
     return NextResponse.json(
-      { error: `Failed to upload to IPFS: ${error.message}` },
+      { error: `Failed to upload to IPFS: ${errorMessage}` },
       { status: 500 }
     );
   }
