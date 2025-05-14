@@ -124,7 +124,7 @@ export async function mintBlogCoin({
       transactionHash: result.hash,
       coinAddress: result.address
     };
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error in mintBlogCoin:', error);
     
     // Enhanced error reporting
@@ -133,7 +133,7 @@ export async function mintBlogCoin({
     } else if (error.message?.includes('rejected')) {
       throw new Error('Transaction was rejected by the blockchain');
     } else {
-      throw new Error(`Failed to mint coin: ${error.message}`);
+      throw new Error(`Failed to mint coin: ${error.message || 'Unknown error'}`);
     }
   }
 } 
