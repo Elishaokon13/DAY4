@@ -3,7 +3,6 @@
 import { usePrivy } from '@privy-io/react-auth';
 import { motion } from 'framer-motion';
 import ThemeToggle from './theme-toggle';
-import { useState } from 'react';
 import toast from 'react-hot-toast';
 
 export default function Navbar() {
