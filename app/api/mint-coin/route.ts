@@ -19,6 +19,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Validate the recipient address format
+    if (!recipientAddress.startsWith('0x') || recipientAddress.length !== 42) {
+      return NextResponse.json(
+        { error: 'Invalid recipient address format' },
+        { status: 400 }
+      );
+    }
+
     // Determine which network to use
     const network = process.env.NEXT_PUBLIC_ZORA_NETWORK || 'base-sepolia';
     const chain = network === 'base' ? base : baseSepolia;
@@ -27,32 +35,47 @@ export async function POST(request: NextRequest) {
       : process.env.NEXT_PUBLIC_BASE_SEPOLIA_RPC_URL || 'https://sepolia.base.org';
 
     // Create a wallet client
-    const account = privateKeyToAccount(PRIVATE_KEY as `0x${string}`);
-    const walletClient = createWalletClient({
-      account,
-      chain,
-      transport: http(rpcUrl)
-    });
+    try {
+      const account = privateKeyToAccount(PRIVATE_KEY as `0x${string}`);
+      const walletClient = createWalletClient({
+        account,
+        chain,
+        transport: http(rpcUrl)
+      });
 
-    // Mint the coin
-    const result = await mintBlogCoin({
-      name,
-      description,
-      contentUri,
-      imageUri,
-      recipient: recipientAddress as `0x${string}`,
-      walletClient
-    });
+      // Mint the coin
+      const result = await mintBlogCoin({
+        name,
+        description,
+        contentUri,
+        imageUri,
+        recipient: recipientAddress as `0x${string}`,
+        walletClient
+      });
 
-    return NextResponse.json({
-      success: true,
-      coinAddress: result.coinAddress,
-      transactionHash: result.transactionHash
-    });
+      return NextResponse.json({
+        success: true,
+        coinAddress: result.coinAddress,
+        transactionHash: result.transactionHash
+      });
+    } catch (walletError) {
+      console.error('Wallet or minting error:', walletError);
+      return NextResponse.json(
+        { 
+          error: `Blockchain interaction failed: ${walletError.message}`,
+          details: process.env.NODE_ENV === 'development' ? walletError.toString() : undefined
+        },
+        { status: 500 }
+      );
+    }
   } catch (error) {
     console.error('Error minting coin:', error);
     return NextResponse.json(
-      { error: 'Failed to mint coin' },
+      { 
+        error: `Failed to mint coin: ${error.message}`,
+        // Include stack trace in development only
+        details: process.env.NODE_ENV === 'development' ? error.stack : undefined
+      },
       { status: 500 }
     );
   }
