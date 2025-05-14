@@ -19,14 +19,17 @@ export default function CoinInfo({ contractAddress, txHash, coinName, coinSymbol
     return null;
   }
 
+  const isPending = contractAddress === 'pending';
+
   const truncateAddress = (address: string) => {
-    if (!address) return '';
+    if (!address || address === 'pending') return 'Pending...';
     return `${address.slice(0, 6)}...${address.slice(-4)}`;
   };
 
   // Generate external links
   const baseScanUrl = `https://sepolia.basescan.org/address/${contractAddress}`;
   const dexScreenerUrl = `https://dexscreener.com/base-sepolia/${contractAddress}`;
+  const zoraUrl = `https://testnet.zora.co/token/${contractAddress}`; 
 
   return (
     <div className="w-full mt-6 p-6 border rounded-lg bg-slate-50 dark:bg-slate-900 shadow-sm">
@@ -42,16 +45,18 @@ export default function CoinInfo({ contractAddress, txHash, coinName, coinSymbol
         <p className="text-sm text-slate-500 dark:text-slate-400">Contract Address:</p>
         <div className="flex items-center mt-1">
           <code className="bg-slate-100 dark:bg-slate-800 p-2 rounded text-sm font-mono flex-1 overflow-x-auto">
-            {contractAddress}
+            {isPending ? "Pending creation..." : contractAddress}
           </code>
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={() => navigator.clipboard.writeText(contractAddress)}
-            className="ml-2"
-          >
-            Copy
-          </Button>
+          {!isPending && (
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={() => navigator.clipboard.writeText(contractAddress)}
+              className="ml-2"
+            >
+              Copy
+            </Button>
+          )}
         </div>
       </div>
       
@@ -66,31 +71,42 @@ export default function CoinInfo({ contractAddress, txHash, coinName, coinSymbol
         </div>
       )}
       
-      <div className="flex flex-col sm:flex-row gap-2 mt-4">
-        <Button 
-          variant="outline" 
-          size="sm" 
-          onClick={() => window.open(baseScanUrl, '_blank')}
-          className="flex items-center justify-center"
-        >
-          View on BaseScan
-          <ExternalLink className="ml-1 h-3 w-3" />
-        </Button>
-        <Button 
-          variant="outline" 
-          size="sm" 
-          onClick={() => window.open(dexScreenerUrl, '_blank')}
-          className="flex items-center justify-center"
-        >
-          View on DexScreener
-          <ExternalLink className="ml-1 h-3 w-3" />
-        </Button>
-      </div>
+      {!isPending && (
+        <div className="flex flex-col sm:flex-row gap-2 mt-4">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => window.open(baseScanUrl, '_blank')}
+            className="flex items-center justify-center"
+          >
+            View on BaseScan
+            <ExternalLink className="ml-1 h-3 w-3" />
+          </Button>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => window.open(dexScreenerUrl, '_blank')}
+            className="flex items-center justify-center"
+          >
+            View on DexScreener
+            <ExternalLink className="ml-1 h-3 w-3" />
+          </Button>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => window.open(zoraUrl, '_blank')}
+            className="flex items-center justify-center"
+          >
+            View on Zora
+            <ExternalLink className="ml-1 h-3 w-3" />
+          </Button>
+        </div>
+      )}
       
       <div className="mt-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 text-yellow-800 dark:text-yellow-300 text-sm rounded-lg">
         <p>
-          <strong>Note:</strong> This is running on Base Sepolia testnet. To create an actual coin, 
-          click the "Redirect to Zora" option when prompted after minting.
+          <strong>Note:</strong> This is running on Base Sepolia testnet. If your transaction is pending or hasn't been confirmed yet, 
+          you can click the "Redirect to Zora" option when prompted after minting to view your coin on Zora's testnet interface.
         </p>
       </div>
     </div>
