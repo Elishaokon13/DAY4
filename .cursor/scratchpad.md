@@ -74,7 +74,7 @@ This project aims to create a modern web application where users can write blog 
 - [ ] 7.2 Test responsive design across devices
 - [ ] 7.3 Test wallet connection edge cases
 - [ ] 7.4 Optimize API calls and error handling
-- [ ] 7.5 Add final polish to animations and UI/UX
+- [x] 7.5 Add final polish to animations and UI/UX
 
    **Success Criteria**: Full application flow works seamlessly, responsive on all devices, error handling works correctly.
 
@@ -107,6 +107,8 @@ We have completed the implementation of almost all major components of the BlogC
 6. Set up ERC-20 coin minting with Zora Coins SDK
 7. Created comprehensive documentation
 
+**Update**: Fixed the Zora Coins SDK implementation to use the latest API. The previous implementation was using a non-existent `ZoraCoinsClient` class. We've updated it to use the proper `createCoin` function from the SDK along with Viem's public and wallet clients.
+
 What remains to be done:
 1. The .env.local file creation was blocked, but placeholders have been documented in the README
 2. Testing the complete user flow (which requires API keys)
@@ -117,6 +119,7 @@ What remains to be done:
 2. There are some vulnerabilities in the dependencies (axios in @pinata/sdk and quill in react-quill). In a production environment, these should be addressed by either updating the dependencies or finding alternative libraries.
 3. To fully test the application, we would need valid API keys for OpenAI, Privy, and Pinata.
 4. For production deployment, a secure method for managing the minter's private key would be needed.
+5. There was a TypeScript error in our Zora SDK implementation that we've now fixed. We updated it to use the correct API functions, imported from the SDK.
 
 ## Lessons
 - Include info useful for debugging in the program output.
@@ -125,4 +128,6 @@ What remains to be done:
 - Always ask before using the -force git command.
 - When dependencies have compatibility issues with newer React versions, use the --force flag with caution, as it might lead to runtime errors.
 - Dynamically import React-Quill to avoid SSR issues, since it requires browser-specific APIs.
-- When handling multiple asynchronous operations (AI generation, IPFS uploads, blockchain transactions), use proper error handling and loading states to provide a good user experience. 
+- When handling multiple asynchronous operations (AI generation, IPFS uploads, blockchain transactions), use proper error handling and loading states to provide a good user experience.
+- When implementing third-party SDKs, check for recent updates to their API. The Zora Coins SDK changed its API from a client-based approach to a function-based approach.
+- For ES2020+ features like BigInt literals, use constructor functions (e.g., `BigInt(0)` instead of `0n`) if targeting older JavaScript versions. 
