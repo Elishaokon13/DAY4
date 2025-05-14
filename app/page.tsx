@@ -9,9 +9,7 @@ import GradientButton from '@/components/ui/gradient-button';
 import CoinDisplay from '@/components/ui/coin-display';
 import useAuth from '@/hooks/use-auth';
 import { usePrivy } from '@privy-io/react-auth';
-import { createCoin } from '@zoralabs/coins-sdk';
-import { createWalletClient, http, createPublicClient } from 'viem';
-import { baseSepolia, base } from 'viem/chains';
+import { mintCoinWithWallet } from '@/utils/zora-client-side';
 
 export default function Home() {
   // Auth state
@@ -52,7 +50,6 @@ export default function Home() {
 
     try {
       setIsGenerating(true);
-      // This would be a call to your OpenAI API route
       const response = await fetch('/api/generate-coin', {
         method: 'POST',
         headers: {
@@ -84,7 +81,6 @@ export default function Home() {
   // Upload content to IPFS
   const uploadToIPFS = async () => {
     try {
-      // This would be a call to your Pinata API route
       const response = await fetch('/api/upload-to-ipfs', {
         method: 'POST',
         headers: {
@@ -129,71 +125,20 @@ export default function Home() {
       
       toast.loading('Preparing transaction...', { id: 'minting' });
       
-      // Get coin parameters from API
-      const response = await fetch('/api/mint-coin', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          name: generatedData.coinName,
-          description: generatedData.coinDescription,
-          contentUri,
-          imageUri,
-          recipientAddress: address
-        }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to prepare transaction');
-      }
-
-      const { coinParams, chainId } = await response.json();
-      
+      // Mint the coin directly using the client-side wallet
       toast.loading('Please confirm the transaction in your wallet...', { id: 'minting' });
       
-      // Determine which network to use
-      const chain = chainId === 8453 ? base : baseSepolia;
-      
-      // Create wallet client using Privy's embedded wallet
-      const walletClient = createWalletClient({
-        account: user.wallet.address as `0x${string}`,
-        chain,
-        transport: http()
+      const result = await mintCoinWithWallet({
+        name: generatedData.coinName,
+        description: generatedData.coinDescription,
+        contentUri,
+        imageUri,
+        recipientAddress: address as `0x${string}`,
+        userWallet: user.wallet
       });
-      
-      // Create public client for the same chain
-      const publicClient = createPublicClient({
-        chain,
-        transport: http()
-      });
-      
-      // Request signature through Privy
-      const result = await createCoin(
-        coinParams, 
-        {
-          async signTypedData({ account, domain, types, primaryType, message }) {
-            // Use Privy to sign
-            const signature = await user.wallet?.signTypedData({
-              domain,
-              types,
-              primaryType,
-              message,
-            });
-            
-            return signature as `0x${string}`;
-          },
-          account: {
-            address: user.wallet.address as `0x${string}`
-          },
-          chain
-        }, 
-        publicClient
-      );
       
       setMintedCoin({
-        address: result.address,
+        address: result.coinAddress,
         name: generatedData.coinName,
         description: generatedData.coinDescription,
         imageUri: imageUri
