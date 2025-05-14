@@ -84,23 +84,29 @@ export async function createBlogCoin(params: CreateCoinParams): Promise<{hash: s
       throw new Error('Connected wallet address does not match the owner address.');
     }
     
-    // Use Zora's SDK to create the coin
-    const { request } = await createCoin({
-      name,
-      symbol,
-      description,
-      tokenURI: metadataUri,
-      creatorAccount: ownerAddress,
-      payoutRecipient: ownerAddress, // Set the owner as payout recipient
-      fixedFee: BigInt(0), // No additional fee
-      mintFeePercentage: 0,
-      mintCap: BigInt(0), // Unlimited minting
-      contractURI: metadataUri
-    }, publicClient);
+    // Use Zora's SDK to create the coin transaction
+    // The SDK returns a transaction hash directly, not a request object
+    const result = await createCoin(
+      {
+        name,
+        symbol,
+        description,
+        tokenURI: metadataUri,
+        creatorAccount: ownerAddress,
+        payoutRecipient: ownerAddress, // Set the owner as payout recipient
+        fixedFee: BigInt(0), // No additional fee
+        mintFeePercentage: 0,
+        mintCap: BigInt(0), // Unlimited minting
+        contractURI: metadataUri
+      },
+      publicClient,
+      walletClient
+    );
     
-    // Send the transaction
-    const hash = await walletClient.writeContract(request);
-    console.log('Transaction hash:', hash);
+    console.log('Transaction result:', result);
+    
+    // Extract the transaction hash from the result
+    const hash = result.hash;
     
     // For demo purposes, we're returning the hash immediately
     // In production, you would wait for transaction confirmation
