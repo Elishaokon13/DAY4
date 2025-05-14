@@ -1,11 +1,21 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import { motion } from 'framer-motion';
 
-// Dynamically import React-Quill to avoid SSR issues
-const ReactQuill = dynamic(() => import('react-quill'), { ssr: false });
+// Create a wrapper component for React-Quill to handle the compatibility issues
+const QuillWrapper = dynamic(
+  async () => {
+    const { default: RQ } = await import('react-quill');
+    // Return a wrapper function that doesn't use findDOMNode
+    return function QuillWrapper({ forwardedRef, ...props }: any) {
+      return <RQ ref={forwardedRef} {...props} />;
+    };
+  },
+  { ssr: false }
+);
+
 import 'react-quill/dist/quill.snow.css';
 
 interface BlogEditorProps {
@@ -16,7 +26,6 @@ interface BlogEditorProps {
 
 export default function BlogEditor({ onChange, value, isReadOnly = false }: BlogEditorProps) {
   const [mounted, setMounted] = useState(false);
-  const editorRef = useRef<any>(null);
 
   useEffect(() => {
     setMounted(true);
@@ -54,8 +63,7 @@ export default function BlogEditor({ onChange, value, isReadOnly = false }: Blog
       className="w-full"
     >
       <div className="min-h-[350px] bg-white dark:bg-gray-800 rounded-lg overflow-hidden shadow-md">
-        <ReactQuill
-          ref={editorRef}
+        <QuillWrapper
           value={value}
           onChange={onChange}
           modules={modules}
