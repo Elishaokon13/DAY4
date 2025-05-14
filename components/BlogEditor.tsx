@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import { usePrivy } from '@privy-io/react-auth';
 import { pinataClient } from '@/lib/pinata';
-import { createBlogCoin, formatBlogPostForIPFS } from '@/lib/zora-coins';
+import { createBlogCoin, formatBlogPostForIPFS, openZoraCoinCreator } from '@/lib/zora-coins';
 
 // Dynamically import ReactQuill to avoid SSR issues
 const ReactQuill = dynamic(() => import('react-quill'), { ssr: false });
@@ -84,18 +84,32 @@ export function BlogEditor() {
         `${title}-metadata-${Date.now()}`
       );
 
-      // Step 3: Create the ERC-20 coin using Zora Coins SDK
-      const result = await createBlogCoin({
+      // Generate the metadata URI from the IPFS hash
+      const metadataUri = `ipfs://${finalIpfsResponse.IpfsHash}`;
+
+      // Step 3: Create the ERC-20 coin
+      const coinParams = {
         name: `${title} Coin`,
         symbol: symbol.toUpperCase(),
         description: `Token for blog post: ${title}`,
         ownerAddress: user.wallet.address as `0x${string}`,
-        metadataUri: `ipfs://${finalIpfsResponse.IpfsHash}`,
-      });
+        metadataUri
+      };
 
-      // Show success message with transaction hash
+      // Option 1: Use our simplified implementation for testing
+      const result = await createBlogCoin(coinParams);
       setSuccess(`Successfully published! Transaction hash: ${result.hash}`);
       setCoinAddress(result.contractAddress);
+
+      // Option 2: Redirect to Zora's coin creation interface
+      const shouldRedirect = window.confirm(
+        'Would you like to be redirected to Zora to create your coin directly? ' +
+        'This will open a new tab where you can finalize the minting process.'
+      );
+
+      if (shouldRedirect) {
+        openZoraCoinCreator(coinParams);
+      }
 
       // Reset form
       setTitle('');
