@@ -16,6 +16,9 @@ export interface PinataResponse {
   isDuplicate?: boolean;
 }
 
+// Define a type for the JSON data to be pinned
+export type PinataJsonContent = Record<string, unknown>;
+
 export class PinataClient {
   private apiKey: string;
   private apiSecret: string;
@@ -31,7 +34,7 @@ export class PinataClient {
    * @param jsonData The JSON data to pin
    * @param name Optional name for the file
    */
-  async pinJSONToIPFS(jsonData: any, name?: string): Promise<PinataResponse> {
+  async pinJSONToIPFS(jsonData: PinataJsonContent, name?: string): Promise<PinataResponse> {
     try {
       const url = `${this.baseUrl}/pinning/pinJSONToIPFS`;
       
