@@ -103,6 +103,43 @@ yarn dev
 - `/api/upload-to-ipfs`: Uploads blog content and images to IPFS
 - `/api/mint-coin`: Mints the ERC-20 coin on Base blockchain
 
+## Zora Coins SDK Implementation
+
+The application uses the Zora Coins SDK to mint ERC-20 tokens on Base. Here's an example of how the integration works:
+
+```typescript
+import { createCoin } from '@zoralabs/coins-sdk';
+import { createWalletClient, createPublicClient, http } from 'viem';
+import { base } from 'viem/chains';
+
+// Set up viem clients
+const publicClient = createPublicClient({
+  chain: base,
+  transport: http("<RPC_URL>"),
+});
+
+const walletClient = createWalletClient({
+  account: "<YOUR_ACCOUNT_ADDRESS>",
+  chain: base,
+  transport: http("<RPC_URL>"),
+});
+
+// Define coin parameters
+const coinParams = {
+  name: "My Blog Coin",
+  symbol: "MBC",
+  description: "A coin representing my blog post",
+  uri: "ipfs://...", // IPFS URI for metadata
+  animationUri: "ipfs://...", // IPFS URI for content
+  payoutRecipient: "<RECIPIENT_ADDRESS>",
+  initialPurchaseWei: BigInt(0)
+};
+
+// Mint the coin
+const result = await createCoin(coinParams, walletClient, publicClient);
+console.log("Coin address:", result.address);
+```
+
 ## Deployment
 
 The app can be easily deployed to Vercel:
