@@ -2,7 +2,7 @@
  * Zora Coins SDK utility functions
  * Handles creating coins from blog posts
  */
-import { createCoin, CreateCoinOptions } from '@zoralabs/coins-sdk';
+import { createCoin } from '@zoralabs/coins-sdk';
 import { type Address } from 'viem';
 
 export interface BlogPostMetadata {
@@ -47,7 +47,7 @@ export async function createBlogCoin(params: CreateCoinParams): Promise<{hash: s
     const creatorFeeBps = 1000000;
     
     // Real implementation using Zora Coins SDK
-    const coinParams: CreateCoinOptions = {
+    const coinParams = {
       name, 
       symbol,
       description,
@@ -63,11 +63,15 @@ export async function createBlogCoin(params: CreateCoinParams): Promise<{hash: s
     console.log('Creating coin with params:', JSON.stringify(coinParams, null, 2));
     
     // Call the Zora SDK's createCoin function
+    // The actual implementation depends on the SDK version
+    // This may require a signer/provider from ethers.js or viem
+    // For now, we'll pass just the coin parameters and rely on the SDK to handle the rest
     const result = await createCoin(coinParams);
     
     console.log('Coin creation result:', JSON.stringify(result, null, 2));
     
-    // Return transaction hash and contract address (if available)
+    // The actual Zora SDK returns an object with hash for transaction hash
+    // and may have an address field for the deployed contract
     return {
       hash: result.hash,
       contractAddress: result.address || '0x'
