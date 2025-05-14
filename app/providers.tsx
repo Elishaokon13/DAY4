@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, type ReactNode } from 'react'
-import { base } from "wagmi/chains";
+import { baseSepolia } from "wagmi/chains";
 import { MiniKitProvider } from "@coinbase/onchainkit/minikit";
 import { PrivyProvider } from '@/components/PrivyProvider'
 
@@ -14,7 +14,7 @@ export function Providers({ children }: { children: ReactNode }) {
       <PrivyProvider>
         <MiniKitProvider
           apiKey={process.env.NEXT_PUBLIC_ONCHAINKIT_API_KEY}
-          chain={base}
+          chain={baseSepolia}
           config={{
             appearance: {
               mode: "auto",
