@@ -22,15 +22,16 @@ export async function POST(request: NextRequest) {
     // Determine which network to use
     const network = process.env.NEXT_PUBLIC_ZORA_NETWORK || 'base-sepolia';
     const chain = network === 'base' ? base : baseSepolia;
+    const rpcUrl = network === 'base' 
+      ? process.env.NEXT_PUBLIC_BASE_MAINNET_RPC_URL || 'https://mainnet.base.org'
+      : process.env.NEXT_PUBLIC_BASE_SEPOLIA_RPC_URL || 'https://sepolia.base.org';
 
     // Create a wallet client
     const account = privateKeyToAccount(PRIVATE_KEY as `0x${string}`);
-    const client = createWalletClient({
+    const walletClient = createWalletClient({
       account,
       chain,
-      transport: http(network === 'base' 
-        ? process.env.NEXT_PUBLIC_BASE_MAINNET_RPC_URL 
-        : process.env.NEXT_PUBLIC_BASE_SEPOLIA_RPC_URL)
+      transport: http(rpcUrl)
     });
 
     // Mint the coin
@@ -40,7 +41,7 @@ export async function POST(request: NextRequest) {
       contentUri,
       imageUri,
       recipient: recipientAddress as `0x${string}`,
-      provider: client
+      walletClient
     });
 
     return NextResponse.json({
