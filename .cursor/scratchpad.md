@@ -118,6 +118,13 @@ What remains to be done:
 2. Testing the complete user flow (which requires API keys)
 3. Deployment to a hosting platform
 
+**New Issue - Git LFS Required**:
+We've encountered a Git push error due to a large file (`node_modules/@next/swc-darwin-x64/next-swc.darwin-x64.node`) exceeding GitHub's 100MB file size limit. This file is 124.82MB. To resolve this, we need to:
+
+1. First ensure node_modules is properly gitignored
+2. Clean up the Git history to remove the large file
+3. Set up proper .gitignore rules to prevent future issues
+
 ## Executor's Feedback or Assistance Requests
 1. Unable to create the .env.local file due to globalIgnore blocking. We've instead documented the required environment variables in the README.md file.
 2. There are some vulnerabilities in the dependencies (axios in @pinata/sdk and quill in react-quill). In a production environment, these should be addressed by either updating the dependencies or finding alternative libraries.
@@ -130,6 +137,7 @@ What remains to be done:
    - Get the Ethereum provider from the wallet using `user.wallet.getEthereumProvider()`
    - Use the standard Ethereum provider methods `wallet_switchEthereumChain` and `wallet_addEthereumChain` to handle network switching
    - Properly handle errors and chain addition when the Base network is not already configured in the wallet
+7. Git push is failing due to large file size. We need to clean up the repository and ensure node_modules is properly ignored.
 
 ## Lessons
 - Include info useful for debugging in the program output.
@@ -142,4 +150,5 @@ What remains to be done:
 - When implementing third-party SDKs, check for recent updates to their API. The Zora Coins SDK changed its API from a client-based approach to a function-based approach.
 - For ES2020+ features like BigInt literals, use constructor functions (e.g., `BigInt(0)` instead of `0n`) if targeting older JavaScript versions. 
 - When using third-party libraries like Privy, always refer to the latest documentation as configuration options might change between versions. Check for TypeScript errors that indicate incompatible property names.
-- For blockchain operations like network switching, use the standard Ethereum provider methods (`wallet_switchEthereumChain` and `wallet_addEthereumChain`) which are more widely supported across different wallet implementations. 
+- For blockchain operations like network switching, use the standard Ethereum provider methods (`wallet_switchEthereumChain` and `wallet_addEthereumChain`) which are more widely supported across different wallet implementations.
+- Never commit node_modules directory to Git, as it can contain large binary files that exceed GitHub's file size limits. 
